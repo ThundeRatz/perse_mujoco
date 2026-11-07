@@ -1,1 +1,66 @@
 test_render.png
+
+.vscode
+
+*.o
+*.bck*
+*.bak
+.deps/
+local_files/
+Imagens/
+config.log
+aclocal.m4
+Makefile.in
+compile
+configure
+depcomp
+install-sh
+missing
+*.gch
+*.pch
+*.swp
+.dirstamp
+.clang_complete
+.tags*
+*.save*
+
+# vscode files
+.vscode/*
+!.vscode/c_cpp_properties.json
+!.vscode/extensions.json
+!.vscode/launch.json
+!.vscode/settings.json
+
+# Doxygen generated files
+Doxygen/
+
+# Local files
+local/
+node_modules
+
+# recordings
+recordings**
+*.bag
+
+# Hidden files
+~*
+*~
+
+# Behavior Tree log files
+*.fbl
+
+# Cache files
+*.cache
+autom4te.cache/
+
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Build files
+build/
+install/
+log/
+
+

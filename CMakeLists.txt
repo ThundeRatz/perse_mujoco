@@ -82,10 +82,16 @@ if(NOT mujoco_FOUND AND NOT MUJOCO_FOUND)
   message(STATUS "MuJoCo configurado via FetchContent: ${MUJOCO_LIBRARY}")
 endif()
 
+find_package(glfw3 REQUIRED)
+
 # ------------------------------------------------------------------------------
 # Executavel do no de simulacao C++
 # ------------------------------------------------------------------------------
-add_executable(perse_mujoco_node src/perse_mujoco_node.cpp)
+add_executable(perse_mujoco_node
+  src/perse_mujoco_node.cpp
+  src/TestSimNode.cpp
+  src/MujocoIpcBridge.cpp
+)
 
 target_include_directories(perse_mujoco_node PUBLIC
   $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
@@ -118,9 +124,43 @@ ament_target_dependencies(perse_mujoco_node
   rosgraph_msgs
 )
 
+# ------------------------------------------------------------------------------
+# Executavel do visualizador nativo independente C++
+# ------------------------------------------------------------------------------
+add_executable(perse_mujoco_viewer
+  src/perse_mujoco_viewer.cpp
+  src/MujocoViewer.cpp
+)
+
+target_include_directories(perse_mujoco_viewer PUBLIC
+  $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
+  $<INSTALL_INTERFACE:include>
+)
+
+target_link_libraries(perse_mujoco_viewer
+  mujoco::mujoco
+  glfw
+)
+
+if(TARGET mujoco::mujoco)
+  get_target_property(MUJOCO_LIB_LOC mujoco::mujoco IMPORTED_LOCATION)
+  if(MUJOCO_LIB_LOC)
+    get_filename_component(MUJOCO_LIB_DIR "${MUJOCO_LIB_LOC}" DIRECTORY)
+    set_target_properties(perse_mujoco_viewer PROPERTIES
+      BUILD_RPATH "${MUJOCO_LIB_DIR}"
+      INSTALL_RPATH "${MUJOCO_LIB_DIR}"
+    )
+  endif()
+endif()
+
+ament_target_dependencies(perse_mujoco_viewer
+  ament_index_cpp
+)
+
 # Instalacao de binarios e recursos
 install(TARGETS
   perse_mujoco_node
+  perse_mujoco_viewer
   DESTINATION lib/${PROJECT_NAME}
 )
 
