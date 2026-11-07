@@ -4,8 +4,15 @@
   <arg name="publish_rate_hz" default="50.0" />
   <arg name="publish_clock" default="true" />
 
+  <arg name="sim_params" default="$(find-pkg-share perse_mujoco)/config/sim_params.yaml" />
+  <arg name="perse_properties" default="$(find-pkg-share perse_bringup)/config/perse_properties.yaml" />
+  <arg name="topics" default="$(find-pkg-share perse_bringup)/config/topics.yaml" />
+
   <!-- No core de simulacao C++ MuJoCo -->
   <node pkg="perse_mujoco" exec="perse_mujoco_node" name="perse_mujoco_node" output="screen">
+    <param from="$(var sim_params)" />
+    <param from="$(var perse_properties)" />
+    <param from="$(var topics)" />
     <param name="model_path" value="$(var model_path)" />
     <param name="publish_rate_hz" value="$(var publish_rate_hz)" />
     <param name="publish_clock" value="$(var publish_clock)" />

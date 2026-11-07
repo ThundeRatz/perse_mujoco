@@ -59,6 +59,9 @@ class MujocoIpcClient:
     def step(self, steps: int = 1) -> Dict[str, Any]:
         return self._send_command({"cmd": "step", "steps": steps}, self.sim_socket_path)
 
+    def set_speed(self, speed: float) -> Dict[str, Any]:
+        return self._send_command({"cmd": "set_speed", "speed": float(speed)}, self.sim_socket_path)
+
     def reset(self) -> Dict[str, Any]:
         return self._send_command({"cmd": "reset"}, self.sim_socket_path)
 

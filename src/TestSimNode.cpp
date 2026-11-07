@@ -6,19 +6,16 @@
 namespace perse_mujoco {
 
 TestSimNode::TestSimNode() : Node("perse_mujoco_node") {
-  this->declare_parameter<std::string>("model_path", "");
-  this->declare_parameter<std::string>("socket_path", "/tmp/perse_mujoco.sock");
-  this->declare_parameter<double>("publish_rate_hz", 50.0);
-  this->declare_parameter<bool>("publish_clock", true);
-
-  std::string model_path = this->get_parameter("model_path").as_string();
+  std::string model_path =
+      this->declare_parameter("model_path", rclcpp::PARAMETER_STRING).get<std::string>();
   if (model_path.empty()) {
     std::string pkg_share =
         ament_index_cpp::get_package_share_directory("perse_mujoco");
     model_path = pkg_share + "/model/test_scene.xml";
   }
 
-  std::string socket_path = this->get_parameter("socket_path").as_string();
+  std::string socket_path =
+      this->declare_parameter("socket_path", rclcpp::PARAMETER_STRING).get<std::string>();
 
   RCLCPP_INFO(this->get_logger(), "Carregando modelo MuJoCo: %s",
               model_path.c_str());
@@ -46,13 +43,14 @@ TestSimNode::TestSimNode() : Node("perse_mujoco_node") {
     RCLCPP_INFO(this->get_logger(), "IPC Bridge ativa em: %s", socket_path.c_str());
   }
 
-  publish_clock_ = this->get_parameter("publish_clock").as_bool();
+  publish_clock_ = this->declare_parameter("publish_clock", true);
   if (publish_clock_) {
     clock_pub_ = this->create_publisher<rosgraph_msgs::msg::Clock>(
         "/clock", rclcpp::ClockQoS());
   }
 
-  double rate_hz = this->get_parameter("publish_rate_hz").as_double();
+  double rate_hz =
+      this->declare_parameter("publish_rate_hz", rclcpp::PARAMETER_DOUBLE).get<double>();
   auto timer_period = std::chrono::duration<double>(1.0 / rate_hz);
 
   timer_ = this->create_wall_timer(

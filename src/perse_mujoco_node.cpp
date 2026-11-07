@@ -1,5 +1,4 @@
-#include <rclcpp/rclcpp.hpp>
-#include "perse_mujoco/TestSimNode.hpp"
+#include "perse_mujoco/PerseMujocoNode.hpp"
 
 #include <csignal>
 
@@ -9,7 +8,7 @@ int main(int argc, char **argv) {
 
   rclcpp::init(argc, argv);
   try {
-    auto node = std::make_shared<perse_mujoco::TestSimNode>();
+    auto node = std::make_shared<perse_mujoco::PerseMujocoNode>();
     rclcpp::spin(node);
   } catch (const std::exception &e) {
     RCLCPP_ERROR(rclcpp::get_logger("perse_mujoco"), "Exceção fatal: %s",

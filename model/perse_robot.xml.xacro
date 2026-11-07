@@ -1,0 +1,218 @@
+<?xml version="1.0"?>
+<mujoco xmlns:xacro="http://www.ros.org/wiki/xacro" model="perse_robot">
+  <compiler angle="radian" meshdir="meshes/"/>
+
+  <!-- Argumentos e Propriedades carregadas do perse_properties.yaml -->
+  <xacro:arg name="properties_file" default="$(find perse_bringup)/config/perse_properties.yaml"/>
+  <xacro:property name="props" value="${xacro.load_yaml('$(arg properties_file)')}"/>
+  <xacro:property name="p" value="${props['/**']['ros__parameters']['properties']}"/>
+
+  <!-- Geometria e Limites Principais -->
+  <xacro:property name="wheel_radius" value="${p['wheel']['wheel_radius']}"/>
+  <xacro:property name="wheel_thickness" value="${p['wheel']['thickness']}"/>
+  <xacro:property name="wheel_scale" value="${wheel_radius / 0.0714}"/>
+  <xacro:property name="steer_limit" value="${p['limits']['steer']}"/>
+  <xacro:property name="chassis_mass" value="3.5"/>
+  <xacro:property name="com_x" value="${p['mass']['center_of_mass']['x']}"/>
+  <xacro:property name="com_y" value="${p['mass']['center_of_mass']['y']}"/>
+  <xacro:property name="com_z" value="${p['mass']['center_of_mass']['z']}"/>
+  <xacro:property name="ixx" value="${p['mass']['inertia_matrix']['xx']}"/>
+  <xacro:property name="iyy" value="${p['mass']['inertia_matrix']['yy']}"/>
+  <xacro:property name="izz" value="${p['mass']['inertia_matrix']['zz']}"/>
+  <xacro:property name="ixy" value="${p['mass']['inertia_matrix']['xy']}"/>
+  <xacro:property name="ixz" value="${p['mass']['inertia_matrix']['xz']}"/>
+  <xacro:property name="iyz" value="${p['mass']['inertia_matrix']['yz']}"/>
+
+  <default>
+    <!-- Geometrias visuais puras (grupo 2, sem colisão) -->
+    <default class="visual">
+      <geom type="mesh" contype="0" conaffinity="0" group="2"/>
+    </default>
+
+    <!-- Geometrias de colisão puras (grupo 3, invisíveis na renderização normal) -->
+    <default class="collision">
+      <geom group="3" condim="3" rgba="0 0 0 0"/>
+    </default>
+    <default class="collision_wheel">
+      <geom group="3" type="cylinder" size="${wheel_radius} ${wheel_thickness / 2.0}" quat="0.7071068 0.7071068 0 0"
+            condim="6" friction="1.2 0.01 0.001" solref="0.01 1" solimp="0.9 0.95 0.001" rgba="0 0 0 0"/>
+    </default>
+    <default class="collision_bumper">
+      <geom group="3" type="box" condim="3" friction="0.5 0.01 0.001" solref="0.02 1" rgba="0 0 0 0"/>
+    </default>
+
+    <default class="suspension">
+      <joint type="slide" axis="0 0 1" range="-0.03 0.03" stiffness="1500" damping="50" springref="0" limited="true"/>
+    </default>
+    <default class="steer">
+      <joint type="hinge" axis="0 0 1" range="-${steer_limit} ${steer_limit}" damping="0.3" armature="0.01" limited="true"/>
+    </default>
+    <default class="wheel">
+      <joint type="hinge" axis="0 1 0" damping="0.01" armature="0.005" limited="false"/>
+    </default>
+  </default>
+
+  <asset>
+    <!-- Materiais PBR Realistas -->
+    <material name="chassis_dark" rgba="0.22 0.22 0.25 1.0" roughness="0.8" specular="0.2"/>
+    <material name="cover_blue" rgba="0.08 0.35 0.75 1.0" roughness="0.6" specular="0.2"/>
+    <material name="tire_rubber" rgba="0.15 0.15 0.15 1.0" roughness="0.9" specular="0.1"/>
+    <material name="bumper_metal" rgba="0.65 0.65 0.68 1.0" roughness="0.4" specular="0.4"/>
+    <material name="lidar_black" rgba="0.08 0.08 0.08 1.0" roughness="0.6" specular="0.3"/>
+    <material name="sensor_black" rgba="0.12 0.12 0.12 1.0" roughness="0.6" specular="0.2"/>
+    <material name="sensor_orange" rgba="0.95 0.65 0.15 1.0" roughness="0.4" specular="0.3"/>
+
+    <!-- Malhas 3D Processadas (Normais Suaves Crease-Aware e STL Oficial RPLidar A2) -->
+    <mesh name="locomocao_mesh" file="locomocao_crease.obj"/>
+    <mesh name="tampa_mesh" file="tampa_crease.obj"/>
+    <mesh name="bumper_base_fixed_mesh" file="bumper_base_fixed.obj"/>
+    <mesh name="bumper_moving_mesh" file="bumper_moving.obj"/>
+    <mesh name="wheel_mesh" file="wheel_aligned.stl" scale="${wheel_scale} ${wheel_scale} ${wheel_scale}"/>
+    <mesh name="rplidar_mesh" file="rplidar_a2.stl"/>
+    <mesh name="camera_mesh" file="camera_centered.stl"/>
+  </asset>
+
+  <worldbody>
+    <!-- =================================================================== -->
+    <!-- ROBÔ PERSE (Pose Inicial: Z=0.08m, assentando no solo)             -->
+    <!-- =================================================================== -->
+    <body name="chassis" pos="0 0 0.08">
+      <freejoint name="chassis_freejoint"/>
+
+      <!-- Parâmetros Inerciais Reais do Chassi Traxxas Stampede + Carga Perse -->
+      <inertial pos="${com_x} ${com_y} 0.02" mass="${chassis_mass}"
+                fullinertia="${ixx} ${iyy} ${izz} ${ixy} ${ixz} ${iyz}"/>
+
+      <!-- Geometrias Visuais do Chassi (Grupo 2, sem colisão) -->
+      <geom name="chassis_locomocao_geom" type="mesh" mesh="locomocao_mesh"
+            pos="0.11 0 0.0425" material="chassis_dark" class="visual"/>
+      <geom name="chassis_tampa_geom" type="mesh" mesh="tampa_mesh"
+            pos="0.132 0 0.149" material="cover_blue" class="visual"/>
+
+      <!-- Base Fixa de Montagem do Bumper (Permanece presa solidamente ao chassi) -->
+      <geom name="bumper_base_geom" type="mesh" mesh="bumper_base_fixed_mesh"
+            pos="0.333 0 0.095" material="bumper_metal" class="visual"/>
+
+      <!-- Sensores no Chassi: RPLidar A2 Oficial Webots e Câmera -->
+      <geom name="lidar_geom" type="mesh" mesh="rplidar_mesh"
+            pos="0.077 0 0.18" material="lidar_black" class="visual"/>
+      <geom name="camera_geom" type="mesh" mesh="camera_mesh"
+            pos="0.31 0 0.18" material="sensor_black" class="visual"/>
+      <geom name="sensor_indutivo_geom" type="cylinder" size="0.0075 0.03"
+            pos="0.305 -0.003 0.0086" euler="0 0.52 0" material="sensor_orange" class="visual"/>
+
+      <!-- Caixas de Colisão do Chassi (Grupo 3, invisíveis) -->
+      <geom name="chassis_base_col" type="box" size="0.16 0.06 0.035" pos="0.12 0 0.05" class="collision"/>
+      <geom name="chassis_top_col" type="box" size="0.14 0.06 0.04" pos="0.13 0 0.13" class="collision"/>
+
+      <!-- Sites de Sensores (Invisíveis visualmente, usados apenas como referências de medição) -->
+      <site name="imu_site" pos="0.1285 0 0.02" size="0.01" group="3" rgba="0 0 0 0"/>
+      <site name="lidar_site" pos="0.077 0 0.21" size="0.015" group="3" rgba="0 0 0 0"/>
+      <site name="camera_site" pos="0.31 0 0.18" size="0.01" group="3" rgba="0 0 0 0"/>
+      <site name="inductive_site" pos="0.305 -0.003 0.0086" size="0.01" group="3" rgba="0 0 0 0"/>
+
+      <!-- BUMPER MÓVEL (Aletas Deslizantes + Barra Frontal tipo Botão)        -->
+      <body name="bumper" pos="0.333 0 0.095">
+        <joint name="bumper_joint" type="slide" axis="1 0 0" range="-0.03 0.0"
+               stiffness="1500" damping="30" springref="0" limited="true"
+               solreflimit="0.005 1" solimplimit="0.95 0.99 0.001"/>
+        <inertial pos="0.04 0 0" mass="0.15" diaginertia="0.0005 0.0005 0.0005"/>
+        <geom name="bumper_moving_geom" type="mesh" mesh="bumper_moving_mesh" material="bumper_metal" class="visual"/>
+        <geom name="bumper_blade_col" type="box" size="0.01 0.175 0.02" pos="0.045 0 0" class="collision_bumper"/>
+        <site name="bumper_touch_site" pos="0.055 0 0" size="0.01" group="3" rgba="0 0 0 0"/>
+      </body>
+
+      <!-- SUSPENSÃO E RODAS TRASEIRAS (X = 0, Y = +-0.113) -->
+      <!-- Traseira Esquerda (RL) -->
+      <body name="suspension_rl" pos="0 0.113 0">
+        <joint name="suspension_rl_joint" class="suspension"/>
+        <inertial pos="0 0 0" mass="0.1" diaginertia="0.0005 0.0005 0.0005"/>
+        <body name="wheel_rl" pos="0 0 0">
+          <joint name="wheel_rl_joint" class="wheel"/>
+          <inertial pos="0 0 0" mass="0.15" diaginertia="0.0005 0.0005 0.0005"/>
+          <geom name="wheel_rl_geom" type="mesh" mesh="wheel_mesh" quat="0 0 0 1" material="tire_rubber" class="visual"/>
+          <geom name="wheel_rl_col" class="collision_wheel"/>
+        </body>
+      </body>
+
+      <!-- Traseira Direita (RR) -->
+      <body name="suspension_rr" pos="0 -0.113 0">
+        <joint name="suspension_rr_joint" class="suspension"/>
+        <inertial pos="0 0 0" mass="0.1" diaginertia="0.0005 0.0005 0.0005"/>
+        <body name="wheel_rr" pos="0 0 0">
+          <joint name="wheel_rr_joint" class="wheel"/>
+          <inertial pos="0 0 0" mass="0.15" diaginertia="0.0005 0.0005 0.0005"/>
+          <geom name="wheel_rr_geom" type="mesh" mesh="wheel_mesh" quat="0 0 0 1" material="tire_rubber" class="visual"/>
+          <geom name="wheel_rr_col" class="collision_wheel"/>
+        </body>
+      </body>
+
+      <!-- SUSPENSÃO, DIREÇÃO E RODAS DIANTEIRAS (X = 0.257, Y = +-0.113) -->
+      <!-- Dianteira Esquerda (FL) -->
+      <body name="suspension_fl" pos="0.257 0.113 0">
+        <joint name="suspension_fl_joint" class="suspension"/>
+        <inertial pos="0 0 0" mass="0.1" diaginertia="0.0005 0.0005 0.0005"/>
+        <body name="steer_fl" pos="0 0 0">
+          <joint name="steer_fl_joint" class="steer"/>
+          <inertial pos="0 0 0" mass="0.05" diaginertia="0.0001 0.0001 0.0001"/>
+          <body name="wheel_fl" pos="0 0 0">
+            <joint name="wheel_fl_joint" class="wheel"/>
+            <inertial pos="0 0 0" mass="0.15" diaginertia="0.0005 0.0005 0.0005"/>
+            <geom name="wheel_fl_geom" type="mesh" mesh="wheel_mesh" quat="0 0 0 1" material="tire_rubber" class="visual"/>
+            <geom name="wheel_fl_col" class="collision_wheel"/>
+          </body>
+        </body>
+      </body>
+
+      <!-- Dianteira Direita (FR) -->
+      <body name="suspension_fr" pos="0.257 -0.113 0">
+        <joint name="suspension_fr_joint" class="suspension"/>
+        <inertial pos="0 0 0" mass="0.1" diaginertia="0.0005 0.0005 0.0005"/>
+        <body name="steer_fr" pos="0 0 0">
+          <joint name="steer_fr_joint" class="steer"/>
+          <inertial pos="0 0 0" mass="0.05" diaginertia="0.0001 0.0001 0.0001"/>
+          <body name="wheel_fr" pos="0 0 0">
+            <joint name="wheel_fr_joint" class="wheel"/>
+            <inertial pos="0 0 0" mass="0.15" diaginertia="0.0005 0.0005 0.0005"/>
+            <geom name="wheel_fr_geom" type="mesh" mesh="wheel_mesh" quat="0 0 0 1" material="tire_rubber" class="visual"/>
+            <geom name="wheel_fr_col" class="collision_wheel"/>
+          </body>
+        </body>
+      </body>
+    </body>
+  </worldbody>
+
+  <!-- Exclusões de Colisão Interna entre Partes do Robô -->
+  <contact>
+    <exclude body1="chassis" body2="wheel_fl"/>
+    <exclude body1="chassis" body2="wheel_fr"/>
+    <exclude body1="chassis" body2="wheel_rl"/>
+    <exclude body1="chassis" body2="wheel_rr"/>
+    <exclude body1="chassis" body2="steer_fl"/>
+    <exclude body1="chassis" body2="steer_fr"/>
+    <exclude body1="chassis" body2="suspension_fl"/>
+    <exclude body1="chassis" body2="suspension_fr"/>
+    <exclude body1="chassis" body2="suspension_rl"/>
+    <exclude body1="chassis" body2="suspension_rr"/>
+    <exclude body1="chassis" body2="bumper"/>
+  </contact>
+
+  <!-- Atuadores da Transmissão e Direção -->
+  <actuator>
+    <position name="steer_fl_actuator" joint="steer_fl_joint" kp="25" kv="3" forcerange="-2.5 2.5" ctrlrange="-${steer_limit} ${steer_limit}"/>
+    <position name="steer_fr_actuator" joint="steer_fr_joint" kp="25" kv="3" forcerange="-2.5 2.5" ctrlrange="-${steer_limit} ${steer_limit}"/>
+    <velocity name="drive_rl_actuator" joint="wheel_rl_joint" kv="2" forcerange="-1.5 1.5" ctrlrange="-25 25"/>
+    <velocity name="drive_rr_actuator" joint="wheel_rr_joint" kv="2" forcerange="-1.5 1.5" ctrlrange="-25 25"/>
+  </actuator>
+
+  <!-- Sensores MuJoCo -->
+  <sensor>
+    <accelerometer name="imu_accel" site="imu_site"/>
+    <gyro name="imu_gyro" site="imu_site"/>
+    <jointpos name="steer_fl_pos" joint="steer_fl_joint"/>
+    <jointpos name="steer_fr_pos" joint="steer_fr_joint"/>
+    <jointvel name="wheel_rl_vel" joint="wheel_rl_joint"/>
+    <jointvel name="wheel_rr_vel" joint="wheel_rr_joint"/>
+    <jointpos name="bumper_pos" joint="bumper_joint"/>
+  </sensor>
+</mujoco>

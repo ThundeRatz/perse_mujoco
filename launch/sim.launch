@@ -1,0 +1,44 @@
+<launch>
+  <arg name="gui" default="true" />
+  <arg name="model_path" default="$(find-pkg-share perse_mujoco)/model/test_scene.xml" />
+  <arg name="mission_points" default="$(find-pkg-share perse_bringup)/config/mission_points.yaml" />
+  <arg name="publish_rate_hz" default="100.0" />
+  <arg name="publish_clock" default="true" />
+  <arg name="use_sim_time" default="true" />
+  <arg name="max_forward_speed" default="1.2" />
+  <arg name="max_backward_speed" default="0.8" />
+
+  <arg name="sim_params" default="$(find-pkg-share perse_mujoco)/config/sim_params.yaml" />
+  <arg name="perse_properties" default="$(find-pkg-share perse_bringup)/config/perse_properties.yaml" />
+  <arg name="topics" default="$(find-pkg-share perse_bringup)/config/topics.yaml" />
+
+  <!-- Nó principal de simulação MuJoCo C++ -->
+  <node pkg="perse_mujoco" exec="perse_mujoco_node" name="perse_mujoco_node" output="screen">
+    <param from="$(var sim_params)" />
+    <param from="$(var perse_properties)" />
+    <param from="$(var topics)" />
+    <param name="model_path" value="$(var model_path)" />
+    <param name="mission_points" value="$(var mission_points)" />
+    <param name="publish_rate_hz" value="$(var publish_rate_hz)" />
+    <param name="publish_clock" value="$(var publish_clock)" />
+    <param name="use_sim_time" value="$(var use_sim_time)" />
+    <param name="speed.forward" value="$(var max_forward_speed)" />
+    <param name="speed.backward" value="$(var max_backward_speed)" />
+  </node>
+
+  <!-- Transformações Estáticas TF (Paridade com Webots e Robô Real) -->
+  <node pkg="tf2_ros" exec="static_transform_publisher" name="odom_map_broadcaster"
+        args="0 0 0 0 0 0 map odom" output="screen" />
+
+  <node pkg="tf2_ros" exec="static_transform_publisher" name="base_lidar_broadcaster"
+        args="0.077 0 0.21 0 0 0 base_link lidar_link" output="screen" />
+
+  <node pkg="tf2_ros" exec="static_transform_publisher" name="base_camera_broadcaster"
+        args="0.31 0 0.18 -1.5707963 0 -1.5707963 base_link camera_link" output="screen" />
+
+  <!-- Visualizador GLFW Nativo MuJoCo (desacoplado da simulação) -->
+  <group if="$(var gui)">
+    <node pkg="perse_mujoco" exec="perse_mujoco_viewer" name="perse_mujoco_viewer"
+          output="screen" args="$(var model_path)" />
+  </group>
+</launch>

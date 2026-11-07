@@ -49,6 +49,20 @@ MujocoIpcBridge::SimMode MujocoIpcBridge::getMode() const { return mode_; }
 
 void MujocoIpcBridge::setMode(SimMode mode) { mode_ = mode; }
 
+double MujocoIpcBridge::getSpeedMultiplier() const { return speed_multiplier_.load(); }
+
+void MujocoIpcBridge::setSpeedMultiplier(double mult) {
+  speed_multiplier_.store(std::max(0.01, std::min(mult, 10.0)));
+}
+
+void MujocoIpcBridge::updatePhysicsFps(double fps) {
+  physics_fps_.store(fps);
+}
+
+void MujocoIpcBridge::setResetCallback(std::function<void()> callback) {
+  reset_callback_ = callback;
+}
+
 bool MujocoIpcBridge::shouldStep(int &steps_to_advance) {
   if (mode_ == SimMode::FREE_RUN) {
     if (paused_) {
@@ -86,6 +100,8 @@ void MujocoIpcBridge::broadcastState() {
         {"type", "state_update"},
         {"sim_time", d_->time},
         {"paused", paused_.load()},
+        {"speed_multiplier", speed_multiplier_.load()},
+        {"physics_fps", physics_fps_.load()},
         {"qpos", qpos},
         {"qvel", qvel}
     };
@@ -222,6 +238,12 @@ json MujocoIpcBridge::dispatchCommand(const json &req, int client_fd) {
     return {{"status", "ok"}, {"mode", mode_str}};
   }
 
+  if (cmd == "set_speed") {
+    double speed = req.value("speed", 1.0);
+    setSpeedMultiplier(speed);
+    return {{"status", "ok"}, {"speed_multiplier", speed_multiplier_.load()}};
+  }
+
   if (cmd == "pause") {
     paused_ = true;
     return {{"status", "ok"}, {"paused", true}, {"sim_time", d_->time}};
@@ -253,6 +275,9 @@ json MujocoIpcBridge::dispatchCommand(const json &req, int client_fd) {
   if (cmd == "reset") {
     std::lock_guard<std::mutex> lock(sim_mutex_);
     mj_resetData(m_, d_);
+    if (reset_callback_) {
+      reset_callback_();
+    }
     return {{"status", "ok"}, {"sim_time", d_->time}};
   }
 

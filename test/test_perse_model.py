@@ -35,9 +35,9 @@ class TestPerseModel(unittest.TestCase):
         chassis_id = mujoco.mj_name2id(self.m, mujoco.mjtObj.mjOBJ_BODY, "chassis")
         chassis_z = self.d.xpos[chassis_id][2]
         
-        # Como o raio da roda é ~0.071m, com a deflexão de ~1cm da mola, o centro do chassi deve estar em [0.055, 0.075]m
-        self.assertGreater(chassis_z, 0.055, f"Chassi muito baixo: z={chassis_z:.3f}m")
-        self.assertLess(chassis_z, 0.075, f"Chassi muito alto: z={chassis_z:.3f}m")
+        # Como o raio da roda é ~0.05755m, com a deflexão de ~0.5cm da mola, o centro do chassi deve estar em [0.045, 0.065]m
+        self.assertGreater(chassis_z, 0.045, f"Chassi muito baixo: z={chassis_z:.3f}m")
+        self.assertLess(chassis_z, 0.065, f"Chassi muito alto: z={chassis_z:.3f}m")
 
         # Roll e Pitch do chassi devem ser próximos de zero (robô plano no chão)
         rot_mat = self.d.xmat[chassis_id].reshape(3, 3)

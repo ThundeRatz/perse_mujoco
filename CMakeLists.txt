@@ -14,6 +14,7 @@ find_package(nav_msgs REQUIRED)
 find_package(std_msgs REQUIRED)
 find_package(vision_msgs REQUIRED)
 find_package(rosgraph_msgs REQUIRED)
+find_package(yaml-cpp REQUIRED)
 
 # ------------------------------------------------------------------------------
 # 1. Tenta encontrar o MuJoCo instalado no sistema via find_package
@@ -89,7 +90,10 @@ find_package(glfw3 REQUIRED)
 # ------------------------------------------------------------------------------
 add_executable(perse_mujoco_node
   src/perse_mujoco_node.cpp
-  src/TestSimNode.cpp
+  src/PerseMujocoNode.cpp
+  src/ActuatorBridge.cpp
+  src/SensorBridge.cpp
+  src/SyntheticVision.cpp
   src/MujocoIpcBridge.cpp
 )
 
@@ -100,6 +104,7 @@ target_include_directories(perse_mujoco_node PUBLIC
 
 target_link_libraries(perse_mujoco_node
   mujoco::mujoco
+  yaml-cpp
 )
 
 if(TARGET mujoco::mujoco)
@@ -156,6 +161,27 @@ endif()
 ament_target_dependencies(perse_mujoco_viewer
   ament_index_cpp
 )
+
+# ------------------------------------------------------------------------------
+# Geracao automatica do perse_robot.xml a partir de perse_robot.xml.xacro e perse_properties.yaml
+# ------------------------------------------------------------------------------
+find_package(perse_bringup QUIET)
+
+set(XACRO_INPUT "${CMAKE_CURRENT_SOURCE_DIR}/model/perse_robot.xml.xacro")
+set(PERSE_PROPS "${CMAKE_CURRENT_SOURCE_DIR}/../perse_bringup/config/perse_properties.yaml")
+if(perse_bringup_FOUND)
+  set(PERSE_PROPS "${perse_bringup_DIR}/../../../share/perse_bringup/config/perse_properties.yaml")
+endif()
+set(ROBOT_XML_OUTPUT "${CMAKE_CURRENT_SOURCE_DIR}/model/perse_robot.xml")
+
+add_custom_target(generate_perse_robot_xml ALL
+  COMMAND /opt/ros/humble/bin/xacro "${XACRO_INPUT}" "properties_file:=${PERSE_PROPS}" > "${ROBOT_XML_OUTPUT}"
+  BYPRODUCTS "${ROBOT_XML_OUTPUT}"
+  COMMENT "Gerando perse_robot.xml a partir do xacro e perse_properties.yaml..."
+)
+
+add_dependencies(perse_mujoco_node generate_perse_robot_xml)
+add_dependencies(perse_mujoco_viewer generate_perse_robot_xml)
 
 # Instalacao de binarios e recursos
 install(TARGETS

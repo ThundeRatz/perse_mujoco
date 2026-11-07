@@ -46,6 +46,12 @@ def sim_resume() -> Dict[str, Any]:
 
 
 @app.tool()
+def sim_set_speed(speed: float = 0.9) -> Dict[str, Any]:
+    """Ajusta o multiplicador de velocidade da simulação física (ex.: 0.5 para metade da velocidade, 2.0 para o dobro)."""
+    return client.set_speed(speed=speed)
+
+
+@app.tool()
 def sim_reset() -> Dict[str, Any]:
     """Reseta a simulação física para o estado inicial (t = 0)."""
     return client.reset()
