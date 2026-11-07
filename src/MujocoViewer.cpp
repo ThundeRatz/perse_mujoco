@@ -233,6 +233,9 @@ bool MujocoViewer::init() {
   // Inicializa estruturas de renderização do MuJoCo
   mjv_defaultCamera(&cam_);
   mjv_defaultOption(&opt_);
+  // Oculta por padrão geoms de colisão e sites de medição (grupo 3) para evitar sobreposição/z-fighting
+  opt_.geomgroup[3] = 0;
+  opt_.sitegroup[3] = 0;
   mjv_defaultScene(&scn_);
   mjr_defaultContext(&con_);
   mjv_defaultPerturb(&pert_);
@@ -638,6 +641,8 @@ bool MujocoViewer::setVisualizationOption(const std::string &option, bool enable
     opt_.flags[mjVIS_INERTIA] = val;
   } else if (option == "transparent") {
     opt_.flags[mjVIS_TRANSPARENT] = val;
+  } else if (option == "collision" || option == "collisions") {
+    opt_.geomgroup[3] = val;
   } else {
     return false;
   }
@@ -665,7 +670,8 @@ json MujocoViewer::dispatchControlCommand(const json &req) {
             {"contacts", opt_.flags[mjVIS_CONTACTPOINT] != 0},
             {"com", opt_.flags[mjVIS_COM] != 0},
             {"inertia", opt_.flags[mjVIS_INERTIA] != 0},
-            {"transparent", opt_.flags[mjVIS_TRANSPARENT] != 0}
+            {"transparent", opt_.flags[mjVIS_TRANSPARENT] != 0},
+            {"collisions", opt_.geomgroup[3] != 0}
         }}
     };
   }
