@@ -6,15 +6,22 @@
 namespace perse_mujoco {
 
 ActuatorBridge::ActuatorBridge(rclcpp::Node *node, mjModel *m) : node_(node) {
-  // Lê limites de velocidade (específicos da simulação) e limites mecânicos/geometria de perse_properties
+  // Lê limites de velocidade (específicos da simulação) e limites
+  // mecânicos/geometria de perse_properties
   max_forward_speed_ =
-      node_->declare_parameter("speed.forward", rclcpp::PARAMETER_DOUBLE).get<double>();
+      node_->declare_parameter("speed.forward", rclcpp::PARAMETER_DOUBLE)
+          .get<double>();
   max_reverse_speed_ =
-      node_->declare_parameter("speed.backward", rclcpp::PARAMETER_DOUBLE).get<double>();
-  max_steer_ =
-      node_->declare_parameter("properties.limits.steer", rclcpp::PARAMETER_DOUBLE).get<double>();
-  wheel_radius_ =
-      node_->declare_parameter("properties.wheel.wheel_radius", rclcpp::PARAMETER_DOUBLE).get<double>();
+      node_->declare_parameter("speed.backward", rclcpp::PARAMETER_DOUBLE)
+          .get<double>();
+  max_steer_ = node_
+                   ->declare_parameter("properties.limits.steer",
+                                       rclcpp::PARAMETER_DOUBLE)
+                   .get<double>();
+  wheel_radius_ = node_
+                      ->declare_parameter("properties.wheel.wheel_radius",
+                                          rclcpp::PARAMETER_DOUBLE)
+                      .get<double>();
 
   // Mapeia os IDs dos atuadores no modelo MuJoCo
   steer_fl_act_id_ = mj_name2id(m, mjOBJ_ACTUATOR, "steer_fl_actuator");
@@ -22,18 +29,22 @@ ActuatorBridge::ActuatorBridge(rclcpp::Node *node, mjModel *m) : node_(node) {
   drive_rl_act_id_ = mj_name2id(m, mjOBJ_ACTUATOR, "drive_rl_actuator");
   drive_rr_act_id_ = mj_name2id(m, mjOBJ_ACTUATOR, "drive_rr_actuator");
 
-  if (steer_fl_act_id_ < 0 || steer_fr_act_id_ < 0 || drive_rl_act_id_ < 0 || drive_rr_act_id_ < 0) {
-    RCLCPP_WARN(node_->get_logger(),
-                "Alguns atuadores não foram encontrados pelo nome no modelo MJCF! "
-                "steer_fl: %d, steer_fr: %d, drive_rl: %d, drive_rr: %d",
-                steer_fl_act_id_, steer_fr_act_id_, drive_rl_act_id_, drive_rr_act_id_);
+  if (steer_fl_act_id_ < 0 || steer_fr_act_id_ < 0 || drive_rl_act_id_ < 0 ||
+      drive_rr_act_id_ < 0) {
+    RCLCPP_WARN(
+        node_->get_logger(),
+        "Alguns atuadores não foram encontrados pelo nome no modelo MJCF! "
+        "steer_fl: %d, steer_fr: %d, drive_rl: %d, drive_rr: %d",
+        steer_fl_act_id_, steer_fr_act_id_, drive_rl_act_id_, drive_rr_act_id_);
   }
 
   // Lê tópicos de atuadores de topics.yaml
   std::string cmd_vel_topic =
-      node_->declare_parameter("topics.cmd_vel", rclcpp::PARAMETER_STRING).get<std::string>();
+      node_->declare_parameter("topics.cmd_vel", rclcpp::PARAMETER_STRING)
+          .get<std::string>();
   std::string led_topic =
-      node_->declare_parameter("topics.led", rclcpp::PARAMETER_STRING).get<std::string>();
+      node_->declare_parameter("topics.led", rclcpp::PARAMETER_STRING)
+          .get<std::string>();
 
   // Cria subscrições de atuadores
   cmd_vel_sub_ = node_->create_subscription<geometry_msgs::msg::Twist>(
@@ -47,10 +58,12 @@ ActuatorBridge::ActuatorBridge(rclcpp::Node *node, mjModel *m) : node_(node) {
   RCLCPP_INFO(node_->get_logger(), "ActuatorBridge inicializada com sucesso!");
 }
 
-void ActuatorBridge::cmdVelCallback(const geometry_msgs::msg::Twist::SharedPtr msg) {
+void ActuatorBridge::cmdVelCallback(
+    const geometry_msgs::msg::Twist::SharedPtr msg) {
   std::lock_guard<std::mutex> lock(control_mutex_);
   target_linear_x_ = std::clamp(msg->linear.x, -1.0, 1.0);
-  target_angular_z_ = std::clamp(sgn(msg->linear.x) * msg->angular.z, -max_steer_, max_steer_);
+  target_angular_z_ =
+      std::clamp(sgn(msg->linear.x) * msg->angular.z, -max_steer_, max_steer_);
 }
 
 void ActuatorBridge::reset() {
@@ -80,9 +93,7 @@ bool ActuatorBridge::getLedState() const {
   return led_state_;
 }
 
-double ActuatorBridge::getWheelRadius() const {
-  return wheel_radius_;
-}
+double ActuatorBridge::getWheelRadius() const { return wheel_radius_; }
 
 void ActuatorBridge::applyControls(const mjModel *m, mjData *d) {
   (void)m;

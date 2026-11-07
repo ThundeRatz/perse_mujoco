@@ -49,15 +49,15 @@ MujocoIpcBridge::SimMode MujocoIpcBridge::getMode() const { return mode_; }
 
 void MujocoIpcBridge::setMode(SimMode mode) { mode_ = mode; }
 
-double MujocoIpcBridge::getSpeedMultiplier() const { return speed_multiplier_.load(); }
+double MujocoIpcBridge::getSpeedMultiplier() const {
+  return speed_multiplier_.load();
+}
 
 void MujocoIpcBridge::setSpeedMultiplier(double mult) {
   speed_multiplier_.store(std::max(0.01, std::min(mult, 10.0)));
 }
 
-void MujocoIpcBridge::updatePhysicsFps(double fps) {
-  physics_fps_.store(fps);
-}
+void MujocoIpcBridge::updatePhysicsFps(double fps) { physics_fps_.store(fps); }
 
 void MujocoIpcBridge::setResetCallback(std::function<void()> callback) {
   reset_callback_ = callback;
@@ -87,7 +87,8 @@ void MujocoIpcBridge::broadcastState() {
   std::vector<int> current_subscribers;
   {
     std::lock_guard<std::mutex> lock(subscribers_mutex_);
-    if (subscribers_.empty()) return;
+    if (subscribers_.empty())
+      return;
     current_subscribers = subscribers_;
   }
 
@@ -96,22 +97,21 @@ void MujocoIpcBridge::broadcastState() {
     std::lock_guard<std::mutex> lock(sim_mutex_);
     std::vector<double> qpos(d_->qpos, d_->qpos + m_->nq);
     std::vector<double> qvel(d_->qvel, d_->qvel + m_->nv);
-    state_msg = {
-        {"type", "state_update"},
-        {"sim_time", d_->time},
-        {"paused", paused_.load()},
-        {"speed_multiplier", speed_multiplier_.load()},
-        {"physics_fps", physics_fps_.load()},
-        {"qpos", qpos},
-        {"qvel", qvel}
-    };
+    state_msg = {{"type", "state_update"},
+                 {"sim_time", d_->time},
+                 {"paused", paused_.load()},
+                 {"speed_multiplier", speed_multiplier_.load()},
+                 {"physics_fps", physics_fps_.load()},
+                 {"qpos", qpos},
+                 {"qvel", qvel}};
   }
 
   std::string msg_str = state_msg.dump() + "\n";
   std::vector<int> dead_subscribers;
 
   for (int fd : current_subscribers) {
-    ssize_t bytes_written = send(fd, msg_str.c_str(), msg_str.size(), MSG_NOSIGNAL);
+    ssize_t bytes_written =
+        send(fd, msg_str.c_str(), msg_str.size(), MSG_NOSIGNAL);
     if (bytes_written < 0) {
       dead_subscribers.push_back(fd);
     }
@@ -121,7 +121,9 @@ void MujocoIpcBridge::broadcastState() {
     std::lock_guard<std::mutex> lock(subscribers_mutex_);
     for (int dead_fd : dead_subscribers) {
       close(dead_fd);
-      subscribers_.erase(std::remove(subscribers_.begin(), subscribers_.end(), dead_fd), subscribers_.end());
+      subscribers_.erase(
+          std::remove(subscribers_.begin(), subscribers_.end(), dead_fd),
+          subscribers_.end());
     }
   }
 }
@@ -135,7 +137,7 @@ void MujocoIpcBridge::serverLoop() {
     return;
   }
 
-  struct sockaddr_un addr {};
+  struct sockaddr_un addr{};
   addr.sun_family = AF_UNIX;
   strncpy(addr.sun_path, socket_path_.c_str(), sizeof(addr.sun_path) - 1);
 
@@ -156,7 +158,8 @@ void MujocoIpcBridge::serverLoop() {
   while (running_) {
     int client_fd = accept(server_fd_, nullptr, nullptr);
     if (client_fd < 0) {
-      if (!running_) break;
+      if (!running_)
+        break;
       continue;
     }
 
@@ -171,7 +174,8 @@ void MujocoIpcBridge::handleClient(int client_fd) {
 
   while (running_) {
     ssize_t bytes_read = read(client_fd, chunk, sizeof(chunk) - 1);
-    if (bytes_read <= 0) break;
+    if (bytes_read <= 0)
+      break;
     chunk[bytes_read] = '\0';
     buffer.append(chunk);
 
@@ -180,7 +184,8 @@ void MujocoIpcBridge::handleClient(int client_fd) {
       std::string line = buffer.substr(0, pos);
       buffer.erase(0, pos + 1);
 
-      if (line.empty()) continue;
+      if (line.empty())
+        continue;
 
       try {
         auto req = json::parse(line);
@@ -200,7 +205,9 @@ void MujocoIpcBridge::handleClient(int client_fd) {
   // Se o cliente desconectar, remove dos subscribers se estivesse cadastrado
   {
     std::lock_guard<std::mutex> lock(subscribers_mutex_);
-    subscribers_.erase(std::remove(subscribers_.begin(), subscribers_.end(), client_fd), subscribers_.end());
+    subscribers_.erase(
+        std::remove(subscribers_.begin(), subscribers_.end(), client_fd),
+        subscribers_.end());
   }
   close(client_fd);
 }
@@ -211,21 +218,21 @@ json MujocoIpcBridge::dispatchCommand(const json &req, int client_fd) {
   if (cmd == "subscribe_state") {
     std::lock_guard<std::mutex> lock(subscribers_mutex_);
     subscribers_.push_back(client_fd);
-    return {{"status", "ok"}, {"subscribed", true}, {"nq", m_->nq}, {"nv", m_->nv}};
+    return {
+        {"status", "ok"}, {"subscribed", true}, {"nq", m_->nq}, {"nv", m_->nv}};
   }
 
   if (cmd == "get_status") {
     std::lock_guard<std::mutex> lock(sim_mutex_);
-    return {
-        {"status", "ok"},
-        {"mode", mode_ == SimMode::FREE_RUN ? "free_run" : "step_mode"},
-        {"paused", paused_.load()},
-        {"sim_time", d_->time},
-        {"timestep", m_->opt.timestep},
-        {"nq", m_->nq},
-        {"nv", m_->nv},
-        {"nbody", m_->nbody},
-        {"ngeom", m_->ngeom}};
+    return {{"status", "ok"},
+            {"mode", mode_ == SimMode::FREE_RUN ? "free_run" : "step_mode"},
+            {"paused", paused_.load()},
+            {"sim_time", d_->time},
+            {"timestep", m_->opt.timestep},
+            {"nq", m_->nq},
+            {"nv", m_->nv},
+            {"nbody", m_->nbody},
+            {"ngeom", m_->ngeom}};
   }
 
   if (cmd == "set_mode") {
@@ -252,7 +259,10 @@ json MujocoIpcBridge::dispatchCommand(const json &req, int client_fd) {
   if (cmd == "resume") {
     paused_ = false;
     mode_ = SimMode::FREE_RUN;
-    return {{"status", "ok"}, {"paused", false}, {"mode", "free_run"}, {"sim_time", d_->time}};
+    return {{"status", "ok"},
+            {"paused", false},
+            {"mode", "free_run"},
+            {"sim_time", d_->time}};
   }
 
   if (cmd == "step") {
@@ -287,12 +297,13 @@ json MujocoIpcBridge::dispatchCommand(const json &req, int client_fd) {
     for (int i = 0; i < m_->nbody; ++i) {
       const char *name = mj_id2name(m_, mjOBJ_BODY, i);
       std::string body_name = name ? name : "body_" + std::to_string(i);
-      bodies.push_back({
-          {"id", i},
-          {"name", body_name},
-          {"pos", {d_->xpos[3 * i], d_->xpos[3 * i + 1], d_->xpos[3 * i + 2]}},
-          {"quat", {d_->xquat[4 * i], d_->xquat[4 * i + 1], d_->xquat[4 * i + 2], d_->xquat[4 * i + 3]}}
-      });
+      bodies.push_back(
+          {{"id", i},
+           {"name", body_name},
+           {"pos", {d_->xpos[3 * i], d_->xpos[3 * i + 1], d_->xpos[3 * i + 2]}},
+           {"quat",
+            {d_->xquat[4 * i], d_->xquat[4 * i + 1], d_->xquat[4 * i + 2],
+             d_->xquat[4 * i + 3]}}});
     }
     return {{"status", "ok"}, {"bodies", bodies}};
   }
@@ -305,21 +316,22 @@ json MujocoIpcBridge::dispatchCommand(const json &req, int client_fd) {
       std::string jnt_name = name ? name : "joint_" + std::to_string(i);
       int qpos_addr = m_->jnt_qposadr[i];
       int dof_addr = m_->jnt_dofadr[i];
-      joints.push_back({
-          {"id", i},
-          {"name", jnt_name},
-          {"qpos", d_->qpos[qpos_addr]},
-          {"qvel", d_->qvel[dof_addr]}
-      });
+      joints.push_back({{"id", i},
+                        {"name", jnt_name},
+                        {"qpos", d_->qpos[qpos_addr]},
+                        {"qvel", d_->qvel[dof_addr]}});
     }
     return {{"status", "ok"}, {"joints", joints}};
   }
 
   if (cmd == "apply_force") {
     std::string body_name = req.value("body", "");
-    std::vector<double> force = req.value("force", std::vector<double>{0.0, 0.0, 0.0});
-    std::vector<double> torque = req.value("torque", std::vector<double>{0.0, 0.0, 0.0});
-    bool has_point = req.contains("point") && req["point"].is_array() && req["point"].size() == 3;
+    std::vector<double> force =
+        req.value("force", std::vector<double>{0.0, 0.0, 0.0});
+    std::vector<double> torque =
+        req.value("torque", std::vector<double>{0.0, 0.0, 0.0});
+    bool has_point = req.contains("point") && req["point"].is_array() &&
+                     req["point"].size() == 3;
 
     std::lock_guard<std::mutex> lock(sim_mutex_);
     int body_id = mj_name2id(m_, mjOBJ_BODY, body_name.c_str());
@@ -328,10 +340,13 @@ json MujocoIpcBridge::dispatchCommand(const json &req, int client_fd) {
     }
 
     if (has_point) {
-      // Aplica a força no ponto exato 3D selecionado (como uma corda presa naquele ponto)
+      // Aplica a força no ponto exato 3D selecionado (como uma corda presa
+      // naquele ponto)
       mjtNum f[3] = {force[0], force[1], force[2]};
       mjtNum t[3] = {torque[0], torque[1], torque[2]};
-      mjtNum p[3] = {req["point"][0].get<double>(), req["point"][1].get<double>(), req["point"][2].get<double>()};
+      mjtNum p[3] = {req["point"][0].get<double>(),
+                     req["point"][1].get<double>(),
+                     req["point"][2].get<double>()};
       mj_applyFT(m_, d_, f, t, p, body_id, d_->qfrc_applied);
     } else {
       d_->xfrc_applied[6 * body_id + 0] = force[0];

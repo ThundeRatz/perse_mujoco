@@ -1,14 +1,14 @@
 #pragma once
 
-#include <rclcpp/rclcpp.hpp>
 #include <geometry_msgs/msg/twist.hpp>
+#include <mujoco/mujoco.h>
 #include <nav_msgs/msg/odometry.hpp>
+#include <rclcpp/rclcpp.hpp>
 #include <rosgraph_msgs/msg/clock.hpp>
 #include <sensor_msgs/msg/imu.hpp>
 #include <sensor_msgs/msg/laser_scan.hpp>
 #include <std_msgs/msg/bool.hpp>
 #include <std_msgs/msg/float64.hpp>
-#include <mujoco/mujoco.h>
 
 #include "perse_mujoco/SyntheticVision.hpp"
 
@@ -26,18 +26,24 @@ public:
   ~SensorBridge() = default;
 
   // Atualiza e publica todos os sensores de acordo com suas taxas de amostragem
-  void updateAndPublish(const mjModel *m, const mjData *d, const rclcpp::Time &stamp);
+  void updateAndPublish(const mjModel *m, const mjData *d,
+                        const rclcpp::Time &stamp);
 
   // Força publicação imediata do /clock
   void publishClock(const mjData *d);
 
 private:
   void publishImu(const mjModel *m, const mjData *d, const rclcpp::Time &stamp);
-  void publishEncoder(const mjModel *m, const mjData *d, const rclcpp::Time &stamp);
-  void publishBumper(const mjModel *m, const mjData *d, const rclcpp::Time &stamp);
-  void publishInductive(const mjModel *m, const mjData *d, const rclcpp::Time &stamp);
-  void publishLidar(const mjModel *m, const mjData *d, const rclcpp::Time &stamp);
-  void publishOdomGt(const mjModel *m, const mjData *d, const rclcpp::Time &stamp);
+  void publishEncoder(const mjModel *m, const mjData *d,
+                      const rclcpp::Time &stamp);
+  void publishBumper(const mjModel *m, const mjData *d,
+                     const rclcpp::Time &stamp);
+  void publishInductive(const mjModel *m, const mjData *d,
+                        const rclcpp::Time &stamp);
+  void publishLidar(const mjModel *m, const mjData *d,
+                    const rclcpp::Time &stamp);
+  void publishOdomGt(const mjModel *m, const mjData *d,
+                     const rclcpp::Time &stamp);
 
   rclcpp::Node *node_{nullptr};
   std::shared_ptr<SyntheticVision> synthetic_vision_;
@@ -89,8 +95,8 @@ private:
   double odom_gt_rate_hz_{50.0};
 
   // Constantes de detecção
-  double inductive_plate_size_{1.0}; // Placa 1x1m
-  double encoder_resolution_{0.001};  // Resolução de quantização de 1mm
+  double inductive_plate_size_{1.0};        // Placa 1x1m
+  double encoder_resolution_{0.001};        // Resolução de quantização de 1mm
   double bumper_trigger_threshold_{-0.005}; // Contração em metros
 };
 

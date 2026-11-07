@@ -1,7 +1,7 @@
 #pragma once
 
-#include <rclcpp/rclcpp.hpp>
 #include <mujoco/mujoco.h>
+#include <rclcpp/rclcpp.hpp>
 
 #include "perse_mujoco/ActuatorBridge.hpp"
 #include "perse_mujoco/MujocoIpcBridge.hpp"

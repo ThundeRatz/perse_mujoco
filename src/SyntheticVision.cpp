@@ -1,10 +1,10 @@
 #include "perse_mujoco/SyntheticVision.hpp"
 
-#include <ament_index_cpp/get_package_share_directory.hpp>
-#include <yaml-cpp/yaml.h>
 #include <algorithm>
+#include <ament_index_cpp/get_package_share_directory.hpp>
 #include <cmath>
 #include <fstream>
+#include <yaml-cpp/yaml.h>
 
 namespace perse_mujoco {
 
@@ -12,7 +12,9 @@ SyntheticVision::SyntheticVision(rclcpp::Node *node, const mjModel *m,
                                  const std::string &mission_points_path)
     : node_(node) {
   std::string recognitions_topic =
-      node_->declare_parameter("topics.bounding_boxes", rclcpp::PARAMETER_STRING).get<std::string>();
+      node_
+          ->declare_parameter("topics.bounding_boxes", rclcpp::PARAMETER_STRING)
+          .get<std::string>();
 
   detections_pub_ = node_->create_publisher<vision_msgs::msg::Detection2DArray>(
       recognitions_topic, rclcpp::SensorDataQoS().reliable());
@@ -21,8 +23,8 @@ SyntheticVision::SyntheticVision(rclcpp::Node *node, const mjModel *m,
   chassis_body_id_ = mj_name2id(m, mjOBJ_BODY, "chassis");
 
   if (camera_site_id_ < 0) {
-    RCLCPP_WARN(node_->get_logger(),
-                "camera_site não encontrado no modelo MJCF! Detecção de visão desabilitada.");
+    RCLCPP_WARN(node_->get_logger(), "camera_site não encontrado no modelo "
+                                     "MJCF! Detecção de visão desabilitada.");
   }
 
   // Calcula focal length a partir de HFOV e largura da imagem (416x416)
@@ -35,7 +37,8 @@ SyntheticVision::SyntheticVision(rclcpp::Node *node, const mjModel *m,
   std::string yaml_to_load = mission_points_path;
   if (yaml_to_load.empty()) {
     try {
-      std::string bringup_share = ament_index_cpp::get_package_share_directory("perse_bringup");
+      std::string bringup_share =
+          ament_index_cpp::get_package_share_directory("perse_bringup");
       yaml_to_load = bringup_share + "/config/mission_points.yaml";
     } catch (...) {
       yaml_to_load = "";
@@ -50,8 +53,10 @@ SyntheticVision::SyntheticVision(rclcpp::Node *node, const mjModel *m,
   findConesInModel(m);
 
   RCLCPP_INFO(node_->get_logger(),
-              "SyntheticVision inicializada com %zu alvos de cone! FOV: %.1f deg, Resolução: %.0fx%.0f",
-              cones_.size(), hfov_rad_ * 180.0 / M_PI, image_width_, image_height_);
+              "SyntheticVision inicializada com %zu alvos de cone! FOV: %.1f "
+              "deg, Resolução: %.0fx%.0f",
+              cones_.size(), hfov_rad_ * 180.0 / M_PI, image_width_,
+              image_height_);
 }
 
 void SyntheticVision::loadMissionPoints(const std::string &yaml_path) {
@@ -78,13 +83,16 @@ void SyntheticVision::loadMissionPoints(const std::string &yaml_path) {
       }
     }
   } catch (const std::exception &e) {
-    RCLCPP_WARN(node_->get_logger(), "Não foi possível carregar mission_points no SyntheticVision: %s",
-                e.what());
+    RCLCPP_WARN(
+        node_->get_logger(),
+        "Não foi possível carregar mission_points no SyntheticVision: %s",
+        e.what());
   }
 }
 
 void SyntheticVision::findConesInModel(const mjModel *m) {
-  if (!m) return;
+  if (!m)
+    return;
   for (int i = 0; i < m->nbody; ++i) {
     const char *name = mj_id2name(m, mjOBJ_BODY, i);
     if (name && std::string(name).rfind("cone", 0) == 0) {
@@ -113,8 +121,10 @@ const std::vector<ConeTarget> &SyntheticVision::getCones() const {
   return cones_;
 }
 
-void SyntheticVision::updateAndPublish(const mjModel *m, const mjData *d, const rclcpp::Time &stamp) {
-  if (!detections_pub_ || camera_site_id_ < 0) return;
+void SyntheticVision::updateAndPublish(const mjModel *m, const mjData *d,
+                                       const rclcpp::Time &stamp) {
+  if (!detections_pub_ || camera_site_id_ < 0)
+    return;
 
   if (stamp < last_publish_time_) {
     last_publish_time_ = rclcpp::Time(0, 0, RCL_ROS_TIME);
@@ -134,11 +144,13 @@ void SyntheticVision::updateAndPublish(const mjModel *m, const mjData *d, const 
   detections_pub_->publish(detections_msg);
 }
 
-void SyntheticVision::computeDetections(const mjModel *m, const mjData *d, const rclcpp::Time &stamp,
-                                       vision_msgs::msg::Detection2DArray &out_detections) {
+void SyntheticVision::computeDetections(
+    const mjModel *m, const mjData *d, const rclcpp::Time &stamp,
+    vision_msgs::msg::Detection2DArray &out_detections) {
   (void)stamp;
   out_detections.detections.clear();
-  if (camera_site_id_ < 0) return;
+  if (camera_site_id_ < 0)
+    return;
 
   // Posição e orientação da câmera no mundo
   const mjtNum *cam_pos = &d->site_xpos[camera_site_id_ * 3];
@@ -162,9 +174,12 @@ void SyntheticVision::computeDetections(const mjModel *m, const mjData *d, const
 
     // Transforma para coordenadas locais da câmera
     // cam_mat armazena colunas X, Y, Z da câmera
-    double rx = cam_mat[0] * dx + cam_mat[3] * dy + cam_mat[6] * dz; // Linha de visão frontal
-    double ry = cam_mat[1] * dx + cam_mat[4] * dy + cam_mat[7] * dz; // Eixo lateral esquerdo
-    double rz = cam_mat[2] * dx + cam_mat[5] * dy + cam_mat[8] * dz; // Eixo vertical para cima
+    double rx = cam_mat[0] * dx + cam_mat[3] * dy +
+                cam_mat[6] * dz; // Linha de visão frontal
+    double ry = cam_mat[1] * dx + cam_mat[4] * dy +
+                cam_mat[7] * dz; // Eixo lateral esquerdo
+    double rz = cam_mat[2] * dx + cam_mat[5] * dy +
+                cam_mat[8] * dz; // Eixo vertical para cima
 
     // Rejeita cones atrás da câmera ou fora do alcance
     if (rx < min_detect_dist_ || rx > max_detect_dist_) {
@@ -186,14 +201,17 @@ void SyntheticVision::computeDetections(const mjModel *m, const mjData *d, const
 
     // Teste de oclusão via mj_ray()
     mjtNum dist = std::sqrt(dx * dx + dy * dy + dz * dz);
-    if (dist < 1e-4) continue;
+    if (dist < 1e-4)
+      continue;
 
     mjtNum ray_dir[3] = {dx / dist, dy / dist, dz / dist};
     int hit_geom = -1;
-    mjtNum hit_dist = mj_ray(m, d, cam_pos, ray_dir, nullptr, 1, chassis_body_id_, &hit_geom, nullptr);
+    mjtNum hit_dist = mj_ray(m, d, cam_pos, ray_dir, nullptr, 1,
+                             chassis_body_id_, &hit_geom, nullptr);
 
     if (hit_dist >= 0 && hit_dist < dist - 0.25) {
-      // O raio colidiu antes do cone. Verifica se a geometria atingida pertence ao cone
+      // O raio colidiu antes do cone. Verifica se a geometria atingida pertence
+      // ao cone
       if (hit_geom >= 0 && cone.body_id >= 0) {
         int hit_body = m->geom_bodyid[hit_geom];
         if (hit_body != cone.body_id) {

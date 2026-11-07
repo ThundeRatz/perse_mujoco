@@ -1,9 +1,9 @@
 #pragma once
 
+#include "perse_mujoco/MujocoIpcBridge.hpp"
+#include <mujoco/mujoco.h>
 #include <rclcpp/rclcpp.hpp>
 #include <rosgraph_msgs/msg/clock.hpp>
-#include <mujoco/mujoco.h>
-#include "perse_mujoco/MujocoIpcBridge.hpp"
 
 #include <chrono>
 #include <memory>

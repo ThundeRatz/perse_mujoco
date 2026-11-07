@@ -1,8 +1,8 @@
 #pragma once
 
-#include <mujoco/mujoco.h>
-#include <mujoco/mjui.h>
 #include <GLFW/glfw3.h>
+#include <mujoco/mjui.h>
+#include <mujoco/mujoco.h>
 #include <nlohmann/json.hpp>
 
 #include <atomic>
@@ -18,9 +18,10 @@ using json = nlohmann::json;
 
 class MujocoViewer {
 public:
-  MujocoViewer(const std::string &model_path,
-               const std::string &sim_socket_path = "/tmp/perse_mujoco.sock",
-               const std::string &viewer_socket_path = "/tmp/perse_viewer.sock");
+  MujocoViewer(
+      const std::string &model_path,
+      const std::string &sim_socket_path = "/tmp/perse_mujoco.sock",
+      const std::string &viewer_socket_path = "/tmp/perse_viewer.sock");
   ~MujocoViewer();
 
   bool init();
@@ -28,10 +29,12 @@ public:
   void stop();
 
   // Controle de câmera, visualização e captura (para MCP)
-  void setCamera(double lookat[3], double distance, double azimuth, double elevation);
+  void setCamera(double lookat[3], double distance, double azimuth,
+                 double elevation);
   bool focusOnBody(const std::string &body_name, double distance = 2.0);
   bool setVisualizationOption(const std::string &option, bool enabled);
-  bool captureFrame(const std::string &output_png_path, int width = 640, int height = 480);
+  bool captureFrame(const std::string &output_png_path, int width = 640,
+                    int height = 480);
 
   // Acessores para callbacks GLFW
   mjModel *getModel() { return m_; }

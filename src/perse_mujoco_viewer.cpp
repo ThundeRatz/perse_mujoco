@@ -17,9 +17,11 @@ int main(int argc, char **argv) {
     }
   }
 
-  std::cout << "[perse_mujoco_viewer] Iniciando visualizador nativo independente..."
+  std::cout
+      << "[perse_mujoco_viewer] Iniciando visualizador nativo independente..."
+      << std::endl;
+  std::cout << "[perse_mujoco_viewer] Carregando modelo: " << model_path
             << std::endl;
-  std::cout << "[perse_mujoco_viewer] Carregando modelo: " << model_path << std::endl;
 
   perse_mujoco::MujocoViewer viewer(model_path);
   if (!viewer.init()) {
@@ -28,7 +30,8 @@ int main(int argc, char **argv) {
     return 1;
   }
 
-  std::cout << "[perse_mujoco_viewer] Visualizador ativo! Pronto para sincronizar com simulação."
+  std::cout << "[perse_mujoco_viewer] Visualizador ativo! Pronto para "
+               "sincronizar com simulação."
             << std::endl;
   viewer.run();
   viewer.stop();

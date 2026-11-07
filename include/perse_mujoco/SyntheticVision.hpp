@@ -1,8 +1,8 @@
 #pragma once
 
+#include <mujoco/mujoco.h>
 #include <rclcpp/rclcpp.hpp>
 #include <vision_msgs/msg/detection2_d_array.hpp>
-#include <mujoco/mujoco.h>
 
 #include <string>
 #include <vector>
@@ -19,14 +19,18 @@ struct ConeTarget {
 
 class SyntheticVision {
 public:
-  SyntheticVision(rclcpp::Node *node, const mjModel *m, const std::string &mission_points_path = "");
+  SyntheticVision(rclcpp::Node *node, const mjModel *m,
+                  const std::string &mission_points_path = "");
   ~SyntheticVision() = default;
 
-  // Atualiza as detecções geométricas sintéticas e publica se no período apropriado
-  void updateAndPublish(const mjModel *m, const mjData *d, const rclcpp::Time &stamp);
+  // Atualiza as detecções geométricas sintéticas e publica se no período
+  // apropriado
+  void updateAndPublish(const mjModel *m, const mjData *d,
+                        const rclcpp::Time &stamp);
 
   // Computa as detecções instantâneas
-  void computeDetections(const mjModel *m, const mjData *d, const rclcpp::Time &stamp,
+  void computeDetections(const mjModel *m, const mjData *d,
+                         const rclcpp::Time &stamp,
                          vision_msgs::msg::Detection2DArray &out_detections);
 
   const std::vector<ConeTarget> &getCones() const;
@@ -36,7 +40,8 @@ private:
   void findConesInModel(const mjModel *m);
 
   rclcpp::Node *node_{nullptr};
-  rclcpp::Publisher<vision_msgs::msg::Detection2DArray>::SharedPtr detections_pub_;
+  rclcpp::Publisher<vision_msgs::msg::Detection2DArray>::SharedPtr
+      detections_pub_;
 
   std::vector<ConeTarget> cones_;
 

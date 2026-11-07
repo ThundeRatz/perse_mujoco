@@ -1,9 +1,9 @@
 #pragma once
 
-#include <rclcpp/rclcpp.hpp>
 #include <geometry_msgs/msg/twist.hpp>
-#include <std_msgs/msg/bool.hpp>
 #include <mujoco/mujoco.h>
+#include <rclcpp/rclcpp.hpp>
+#include <std_msgs/msg/bool.hpp>
 
 #include <mutex>
 
@@ -46,17 +46,18 @@ private:
   int drive_rr_act_id_{-1};
 
   // Parâmetros geométricos e dinâmicos do chassi
-  double wheelbase_{0.257};      // Distância entre eixos (m)
-  double trackwidth_{0.226};     // Bitola entre rodas (m)
-  double wheel_radius_{0.0714};   // Raio da roda (m)
-  double max_steer_{0.8};        // Ângulo máximo de esterçamento (rad)
-  double max_forward_speed_{1.2}; // Velocidade linear correspondente a PWM 1.0 (m/s)
-  double max_reverse_speed_{0.8}; // Velocidade linear a ré correspondente a PWM -1.0 (m/s)
+  double wheelbase_{0.257};     // Distância entre eixos (m)
+  double trackwidth_{0.226};    // Bitola entre rodas (m)
+  double wheel_radius_{0.0714}; // Raio da roda (m)
+  double max_steer_{0.8};       // Ângulo máximo de esterçamento (rad)
+  double max_forward_speed_{
+      1.2}; // Velocidade linear correspondente a PWM 1.0 (m/s)
+  double max_reverse_speed_{
+      0.8}; // Velocidade linear a ré correspondente a PWM -1.0 (m/s)
 };
 
-template <typename T>
-constexpr int sgn(T val) {
-    return (T(0) < val) - (val < T(0));
+template <typename T> constexpr int sgn(T val) {
+  return (T(0) < val) - (val < T(0));
 }
 
 } // namespace perse_mujoco

@@ -7,7 +7,8 @@ namespace perse_mujoco {
 
 TestSimNode::TestSimNode() : Node("perse_mujoco_node") {
   std::string model_path =
-      this->declare_parameter("model_path", rclcpp::PARAMETER_STRING).get<std::string>();
+      this->declare_parameter("model_path", rclcpp::PARAMETER_STRING)
+          .get<std::string>();
   if (model_path.empty()) {
     std::string pkg_share =
         ament_index_cpp::get_package_share_directory("perse_mujoco");
@@ -15,7 +16,8 @@ TestSimNode::TestSimNode() : Node("perse_mujoco_node") {
   }
 
   std::string socket_path =
-      this->declare_parameter("socket_path", rclcpp::PARAMETER_STRING).get<std::string>();
+      this->declare_parameter("socket_path", rclcpp::PARAMETER_STRING)
+          .get<std::string>();
 
   RCLCPP_INFO(this->get_logger(), "Carregando modelo MuJoCo: %s",
               model_path.c_str());
@@ -34,13 +36,16 @@ TestSimNode::TestSimNode() : Node("perse_mujoco_node") {
     throw std::runtime_error("Falha ao inicializar dados do MuJoCo");
   }
 
-  RCLCPP_INFO(this->get_logger(),
-              "MuJoCo inicializado com sucesso! nq=%ld, nv=%ld, timestep=%.4f s",
-              static_cast<long>(m_->nq), static_cast<long>(m_->nv), m_->opt.timestep);
+  RCLCPP_INFO(
+      this->get_logger(),
+      "MuJoCo inicializado com sucesso! nq=%ld, nv=%ld, timestep=%.4f s",
+      static_cast<long>(m_->nq), static_cast<long>(m_->nv), m_->opt.timestep);
 
-  ipc_bridge_ = std::make_unique<MujocoIpcBridge>(m_, d_, sim_mutex_, socket_path);
+  ipc_bridge_ =
+      std::make_unique<MujocoIpcBridge>(m_, d_, sim_mutex_, socket_path);
   if (ipc_bridge_->start()) {
-    RCLCPP_INFO(this->get_logger(), "IPC Bridge ativa em: %s", socket_path.c_str());
+    RCLCPP_INFO(this->get_logger(), "IPC Bridge ativa em: %s",
+                socket_path.c_str());
   }
 
   publish_clock_ = this->declare_parameter("publish_clock", true);
@@ -50,7 +55,8 @@ TestSimNode::TestSimNode() : Node("perse_mujoco_node") {
   }
 
   double rate_hz =
-      this->declare_parameter("publish_rate_hz", rclcpp::PARAMETER_DOUBLE).get<double>();
+      this->declare_parameter("publish_rate_hz", rclcpp::PARAMETER_DOUBLE)
+          .get<double>();
   auto timer_period = std::chrono::duration<double>(1.0 / rate_hz);
 
   timer_ = this->create_wall_timer(
@@ -89,7 +95,8 @@ void TestSimNode::stepSimulation() {
     for (int i = 0; i < steps_to_run; ++i) {
       mj_step(m_, d_);
     }
-    // Zera forças residuais após cada ciclo de passos para não acumular aceleração infinita
+    // Zera forças residuais após cada ciclo de passos para não acumular
+    // aceleração infinita
     mju_zero(d_->qfrc_applied, m_->nv);
     mju_zero(d_->xfrc_applied, 6 * m_->nbody);
   }
@@ -109,9 +116,10 @@ void TestSimNode::stepSimulation() {
     std::lock_guard<std::mutex> lock(sim_mutex_);
     double box_z = d_->qpos[2];
     RCLCPP_INFO(this->get_logger(),
-                "[SimTime: %.3f s] Mode: %s | test_box Z: %.3f m",
-                d_->time,
-                ipc_bridge_->getMode() == MujocoIpcBridge::SimMode::FREE_RUN ? "FreeRun" : "StepMode",
+                "[SimTime: %.3f s] Mode: %s | test_box Z: %.3f m", d_->time,
+                ipc_bridge_->getMode() == MujocoIpcBridge::SimMode::FREE_RUN
+                    ? "FreeRun"
+                    : "StepMode",
                 box_z);
   }
 }

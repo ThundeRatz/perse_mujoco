@@ -8,20 +8,29 @@ namespace perse_mujoco {
 SensorBridge::SensorBridge(rclcpp::Node *node, const mjModel *m,
                            std::shared_ptr<SyntheticVision> synthetic_vision,
                            double wheel_radius)
-    : node_(node), synthetic_vision_(synthetic_vision), wheel_radius_(wheel_radius) {
+    : node_(node), synthetic_vision_(synthetic_vision),
+      wheel_radius_(wheel_radius) {
   // Lê tópicos de sensores do arquivo topics.yaml
   std::string imu_topic =
-      node_->declare_parameter("topics.imu", rclcpp::PARAMETER_STRING).get<std::string>();
+      node_->declare_parameter("topics.imu", rclcpp::PARAMETER_STRING)
+          .get<std::string>();
   std::string encoder_topic =
-      node_->declare_parameter("topics.encoder", rclcpp::PARAMETER_STRING).get<std::string>();
+      node_->declare_parameter("topics.encoder", rclcpp::PARAMETER_STRING)
+          .get<std::string>();
   std::string bumper_topic =
-      node_->declare_parameter("topics.bumper", rclcpp::PARAMETER_STRING).get<std::string>();
+      node_->declare_parameter("topics.bumper", rclcpp::PARAMETER_STRING)
+          .get<std::string>();
   std::string inductive_topic =
-      node_->declare_parameter("topics.inductive_sensor", rclcpp::PARAMETER_STRING).get<std::string>();
+      node_
+          ->declare_parameter("topics.inductive_sensor",
+                              rclcpp::PARAMETER_STRING)
+          .get<std::string>();
   std::string lidar_topic =
-      node_->declare_parameter("topics.lidar", rclcpp::PARAMETER_STRING).get<std::string>();
+      node_->declare_parameter("topics.lidar", rclcpp::PARAMETER_STRING)
+          .get<std::string>();
   std::string odom_gt_topic =
-      node_->declare_parameter("topics.odom_gt", rclcpp::PARAMETER_STRING).get<std::string>();
+      node_->declare_parameter("topics.odom_gt", rclcpp::PARAMETER_STRING)
+          .get<std::string>();
 
   // Inicialização dos publicadores ROS 2
   clock_pub_ = node_->create_publisher<rosgraph_msgs::msg::Clock>(
@@ -82,13 +91,16 @@ SensorBridge::SensorBridge(rclcpp::Node *node, const mjModel *m,
 }
 
 void SensorBridge::publishClock(const mjData *d) {
-  if (!clock_pub_) return;
+  if (!clock_pub_)
+    return;
   rosgraph_msgs::msg::Clock clock_msg;
-  clock_msg.clock = rclcpp::Time(static_cast<int64_t>(d->time * 1e9), RCL_ROS_TIME);
+  clock_msg.clock =
+      rclcpp::Time(static_cast<int64_t>(d->time * 1e9), RCL_ROS_TIME);
   clock_pub_->publish(clock_msg);
 }
 
-void SensorBridge::updateAndPublish(const mjModel *m, const mjData *d, const rclcpp::Time &stamp) {
+void SensorBridge::updateAndPublish(const mjModel *m, const mjData *d,
+                                    const rclcpp::Time &stamp) {
   // Publica relógio a cada invocação do step
   publishClock(d);
 
@@ -139,8 +151,10 @@ void SensorBridge::updateAndPublish(const mjModel *m, const mjData *d, const rcl
   }
 }
 
-void SensorBridge::publishImu(const mjModel *m, const mjData *d, const rclcpp::Time &stamp) {
-  if (!imu_pub_) return;
+void SensorBridge::publishImu(const mjModel *m, const mjData *d,
+                              const rclcpp::Time &stamp) {
+  if (!imu_pub_)
+    return;
 
   sensor_msgs::msg::Imu msg;
   msg.header.stamp = stamp;
@@ -185,14 +199,17 @@ void SensorBridge::publishImu(const mjModel *m, const mjData *d, const rclcpp::T
   imu_pub_->publish(msg);
 }
 
-void SensorBridge::publishEncoder(const mjModel *m, const mjData *d, const rclcpp::Time &stamp) {
+void SensorBridge::publishEncoder(const mjModel *m, const mjData *d,
+                                  const rclcpp::Time &stamp) {
   (void)m;
   (void)stamp;
-  if (!encoder_pub_ || wheel_rl_qpos_adr_ < 0) return;
+  if (!encoder_pub_ || wheel_rl_qpos_adr_ < 0)
+    return;
 
   double wheel_angle = d->qpos[wheel_rl_qpos_adr_];
   double raw_dist = wheel_angle * wheel_radius_;
-  double quantized_dist = std::round(raw_dist / encoder_resolution_) * encoder_resolution_;
+  double quantized_dist =
+      std::round(raw_dist / encoder_resolution_) * encoder_resolution_;
 
   std_msgs::msg::Float64 msg;
   msg.data = quantized_dist;
@@ -200,9 +217,11 @@ void SensorBridge::publishEncoder(const mjModel *m, const mjData *d, const rclcp
   last_encoder_dist_ = quantized_dist;
 }
 
-void SensorBridge::publishBumper(const mjModel *m, const mjData *d, const rclcpp::Time &stamp) {
+void SensorBridge::publishBumper(const mjModel *m, const mjData *d,
+                                 const rclcpp::Time &stamp) {
   (void)stamp;
-  if (!bumper_pub_) return;
+  if (!bumper_pub_)
+    return;
 
   bool pressed = false;
 
@@ -233,10 +252,12 @@ void SensorBridge::publishBumper(const mjModel *m, const mjData *d, const rclcpp
   last_bumper_state_ = pressed;
 }
 
-void SensorBridge::publishInductive(const mjModel *m, const mjData *d, const rclcpp::Time &stamp) {
+void SensorBridge::publishInductive(const mjModel *m, const mjData *d,
+                                    const rclcpp::Time &stamp) {
   (void)m;
   (void)stamp;
-  if (!inductive_pub_ || inductive_site_id_ < 0 || !synthetic_vision_) return;
+  if (!inductive_pub_ || inductive_site_id_ < 0 || !synthetic_vision_)
+    return;
 
   const mjtNum *site_pos = &d->site_xpos[inductive_site_id_ * 3];
   bool reading = false;
@@ -263,8 +284,10 @@ void SensorBridge::publishInductive(const mjModel *m, const mjData *d, const rcl
   last_inductive_state_ = reading;
 }
 
-void SensorBridge::publishLidar(const mjModel *m, const mjData *d, const rclcpp::Time &stamp) {
-  if (!lidar_pub_ || lidar_site_id_ < 0) return;
+void SensorBridge::publishLidar(const mjModel *m, const mjData *d,
+                                const rclcpp::Time &stamp) {
+  if (!lidar_pub_ || lidar_site_id_ < 0)
+    return;
 
   sensor_msgs::msg::LaserScan scan;
   scan.header.stamp = stamp;
@@ -290,14 +313,13 @@ void SensorBridge::publishLidar(const mjModel *m, const mjData *d, const rclcpp:
     double ly = std::sin(angle);
 
     // Converte vetor da direção do feixe local para o referencial de mundo
-    mjtNum ray_dir[3] = {
-      lidar_mat[0] * lx + lidar_mat[1] * ly,
-      lidar_mat[3] * lx + lidar_mat[4] * ly,
-      lidar_mat[6] * lx + lidar_mat[7] * ly
-    };
+    mjtNum ray_dir[3] = {lidar_mat[0] * lx + lidar_mat[1] * ly,
+                         lidar_mat[3] * lx + lidar_mat[4] * ly,
+                         lidar_mat[6] * lx + lidar_mat[7] * ly};
 
     int hit_geom = -1;
-    mjtNum dist = mj_ray(m, d, lidar_pos, ray_dir, nullptr, 1, chassis_body_id_, &hit_geom, nullptr);
+    mjtNum dist = mj_ray(m, d, lidar_pos, ray_dir, nullptr, 1, chassis_body_id_,
+                         &hit_geom, nullptr);
 
     if (dist >= scan.range_min && dist <= scan.range_max) {
       scan.ranges[i] = static_cast<float>(dist);
@@ -309,9 +331,11 @@ void SensorBridge::publishLidar(const mjModel *m, const mjData *d, const rclcpp:
   lidar_pub_->publish(scan);
 }
 
-void SensorBridge::publishOdomGt(const mjModel *m, const mjData *d, const rclcpp::Time &stamp) {
+void SensorBridge::publishOdomGt(const mjModel *m, const mjData *d,
+                                 const rclcpp::Time &stamp) {
   (void)m;
-  if (!odom_gt_pub_) return;
+  if (!odom_gt_pub_)
+    return;
 
   nav_msgs::msg::Odometry msg;
   msg.header.stamp = stamp;
