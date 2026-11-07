@@ -1,0 +1,13 @@
+<launch>
+  <!-- Argumentos configuraveis -->
+  <arg name="model_path" default="$(find-pkg-share perse_mujoco)/model/test_scene.xml" />
+  <arg name="publish_rate_hz" default="50.0" />
+  <arg name="publish_clock" default="true" />
+
+  <!-- No core de simulacao C++ MuJoCo -->
+  <node pkg="perse_mujoco" exec="perse_mujoco_node" name="perse_mujoco_node" output="screen">
+    <param name="model_path" value="$(var model_path)" />
+    <param name="publish_rate_hz" value="$(var publish_rate_hz)" />
+    <param name="publish_clock" value="$(var publish_clock)" />
+  </node>
+</launch>

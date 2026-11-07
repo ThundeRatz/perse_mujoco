@@ -1,0 +1,44 @@
+<mujoco model="test_arena">
+  <compiler angle="degree" coordinate="local"/>
+  
+  <option timestep="0.002" integrator="RK4" gravity="0 0 -9.81"/>
+
+  <visual>
+    <headlight diffuse="0.8 0.8 0.8" ambient="0.3 0.3 0.3" specular="0.1 0.1 0.1"/>
+    <rgba haze="0.15 0.25 0.35 1"/>
+    <global azimuth="140" elevation="-30"/>
+  </visual>
+
+  <asset>
+    <texture type="skybox" builtin="gradient" rgb1="0.3 0.5 0.7" rgb2="0 0 0" width="512" height="512"/>
+    <texture name="grid" type="2d" builtin="checker" width="512" height="512" rgb1="0.1 0.2 0.3" rgb2="0.2 0.3 0.4"/>
+    <material name="grid_mat" texture="grid" texrepeat="5 5" reflectance="0.2"/>
+    
+    <material name="cone_mat" rgba="1.0 0.4 0.0 1.0" reflectance="0.3"/>
+    <material name="box_mat" rgba="0.2 0.6 1.0 1.0" reflectance="0.4"/>
+  </asset>
+
+  <worldbody>
+    <!-- Chao / Grid -->
+    <geom name="ground" type="plane" size="10 10 0.1" material="grid_mat" friction="0.8 0.1 0.1"/>
+
+    <!-- Objeto de teste 1: Caixa caindo -->
+    <body name="test_box" pos="0 0 1.5">
+      <freejoint name="box_joint"/>
+      <geom name="box_geom" type="box" size="0.2 0.2 0.2" material="box_mat" mass="1.0" friction="0.7 0.1 0.1"/>
+    </body>
+
+    <!-- Objeto de teste 2: Cilindro/Cone -->
+    <body name="test_cone" pos="1.0 0.5 0.15">
+      <geom name="cone_geom" type="cylinder" size="0.1 0.15" material="cone_mat" mass="0.5"/>
+    </body>
+
+    <!-- Objeto de teste 3: Outro cone -->
+    <body name="test_cone_2" pos="-1.0 -0.5 0.15">
+      <geom name="cone_geom_2" type="cylinder" size="0.1 0.15" material="cone_mat" mass="0.5"/>
+    </body>
+
+    <!-- Iluminacao -->
+    <light directional="true" pos="0 0 5" dir="0 0 -1"/>
+  </worldbody>
+</mujoco>
