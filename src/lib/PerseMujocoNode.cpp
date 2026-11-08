@@ -234,12 +234,12 @@ void PerseMujocoNode::stepSimulation() {
   // Transmite estado atualizado para visualizadores conectados (nativo e web)
   ipc_bridge_->broadcastState();
 
-  // Atualiza e publica todos os sensores ROS 2
-  rclcpp::Time current_stamp(static_cast<int64_t>(d_->time * 1e9),
-                             RCL_ROS_TIME);
+  // Atualiza e publica todos os sensores ROS 2 usando o relógio do nó para
+  // manter todas as mensagens sincronizadas na mesma timeline ("ros_time")
+  rclcpp::Time current_stamp = this->now();
   {
     std::lock_guard<std::mutex> lock(sim_mutex_);
-    sensor_bridge_->updateAndPublish(m_, d_, current_stamp);
+    sensor_bridge_->updateAndPublish(m_, d_, current_stamp, publish_clock_);
     synthetic_vision_->updateAndPublish(m_, d_, current_stamp);
   }
 }

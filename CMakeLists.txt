@@ -16,6 +16,9 @@ find_package(vision_msgs REQUIRED)
 find_package(rosgraph_msgs REQUIRED)
 find_package(std_srvs REQUIRED)
 find_package(yaml-cpp REQUIRED)
+find_package(tf2 REQUIRED)
+find_package(tf2_ros REQUIRED)
+find_package(tf2_geometry_msgs REQUIRED)
 find_package(perse_lib REQUIRED)
 
 # ------------------------------------------------------------------------------
@@ -130,6 +133,9 @@ ament_target_dependencies(perse_mujoco_node
   vision_msgs
   rosgraph_msgs
   std_srvs
+  tf2
+  tf2_ros
+  tf2_geometry_msgs
 )
 
 # ------------------------------------------------------------------------------

@@ -33,24 +33,26 @@ SyntheticVision::SyntheticVision(rclcpp::Node *node, const mjModel *m,
   cx_ = image_width_ / 2.0;
   cy_ = image_height_ / 2.0;
 
-  // Carrega cones primeiro dos pontos de missão se fornecido
-  std::string yaml_to_load = mission_points_path;
-  if (yaml_to_load.empty()) {
-    try {
-      std::string bringup_share =
-          ament_index_cpp::get_package_share_directory("perse_bringup");
-      yaml_to_load = bringup_share + "/config/mission_points.yaml";
-    } catch (...) {
-      yaml_to_load = "";
+  // Carrega corpos de cones presentes diretamente no modelo MuJoCo
+  findConesInModel(m);
+
+  // Se nenhum cone foi encontrado no modelo XML, tenta carregar do YAML de
+  // mission_points como fallback
+  if (cones_.empty()) {
+    std::string yaml_to_load = mission_points_path;
+    if (yaml_to_load.empty()) {
+      try {
+        std::string bringup_share =
+            ament_index_cpp::get_package_share_directory("perse_bringup");
+        yaml_to_load = bringup_share + "/config/mission_points.yaml";
+      } catch (...) {
+        yaml_to_load = "";
+      }
+    }
+    if (!yaml_to_load.empty()) {
+      loadMissionPoints(yaml_to_load);
     }
   }
-
-  if (!yaml_to_load.empty()) {
-    loadMissionPoints(yaml_to_load);
-  }
-
-  // Também busca corpos de cones presentes diretamente no modelo MuJoCo
-  findConesInModel(m);
 
   RCLCPP_INFO(node_->get_logger(),
               "SyntheticVision inicializada com %zu alvos de cone! FOV: %.1f "

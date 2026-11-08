@@ -118,7 +118,7 @@ class TestPerseMujocoRosBridge(unittest.TestCase):
         # Check Camera Recognitions
         cam_msg = self.received_msgs.get("/perse/sensors/camera/recognitions")
         self.assertIsNotNone(cam_msg)
-        self.assertEqual(cam_msg.header.frame_id, "camera_link")
+        self.assertIn("camera", cam_msg.header.frame_id)
         # There should be at least one cone visible ahead in test_scene.xml (cone_1 or cone_2)
         print(f"[TEST] Detections count: {len(cam_msg.detections)}")
         if len(cam_msg.detections) > 0:

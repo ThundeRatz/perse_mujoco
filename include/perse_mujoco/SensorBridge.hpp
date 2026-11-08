@@ -14,9 +14,16 @@
 
 #include <memory>
 #include <string>
+#include <tf2_ros/transform_broadcaster.h>
 #include <vector>
 
 namespace perse_mujoco {
+
+struct MetalPlate {
+  int body_id{-1};
+  double x{0.0};
+  double y{0.0};
+};
 
 class SensorBridge {
 public:
@@ -27,7 +34,7 @@ public:
 
   // Atualiza e publica todos os sensores de acordo com suas taxas de amostragem
   void updateAndPublish(const mjModel *m, const mjData *d,
-                        const rclcpp::Time &stamp);
+                        const rclcpp::Time &stamp, bool publish_clock = true);
 
   // Força publicação imediata do /clock
   void publishClock(const mjData *d);
@@ -47,6 +54,8 @@ private:
 
   rclcpp::Node *node_{nullptr};
   std::shared_ptr<SyntheticVision> synthetic_vision_;
+  std::unique_ptr<tf2_ros::TransformBroadcaster> tf_broadcaster_;
+  std::vector<MetalPlate> plates_;
 
   // Publicadores ROS 2
   rclcpp::Publisher<rosgraph_msgs::msg::Clock>::SharedPtr clock_pub_;

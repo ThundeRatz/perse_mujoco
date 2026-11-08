@@ -2,6 +2,9 @@
 
 #include <ament_index_cpp/get_package_share_directory.hpp>
 #include <nlohmann/json.hpp>
+#include <rerun/archetypes/coordinate_frame.hpp>
+#include <rerun/archetypes/image.hpp>
+#include <rerun/archetypes/pinhole.hpp>
 
 #include <arpa/inet.h>
 #include <sys/socket.h>
@@ -485,6 +488,38 @@ void MujocoRerun::logModel() {
       logGeomWithFrame(entity_path, g, body_frame);
     }
   }
+
+  // Publica o Pinhole padrão de câmera 2D para visualização de imagem e
+  // bounding boxes
+  float hfov_rad = 70.0f * static_cast<float>(M_PI) / 180.0f;
+  float fx = (416.0f / 2.0f) / std::tan(hfov_rad / 2.0f);
+
+  // Em Rerun / Rewire:
+  // A bridge rewire mapeia tópicos 2D ligados a "camera_link" para o frame
+  // "/camera_link#image". Conectamos o Pinhole de /camera_link para
+  // /camera_link#image e posicionamos a imagem estática nesse frame.
+  auto pinhole = rerun::archetypes::Pinhole::from_focal_length_and_resolution(
+                     fx, {416.0f, 416.0f})
+                     .with_camera_xyz(rerun::components::ViewCoordinates::RDF)
+                     .with_image_plane_distance(0.25f)
+                     .with_parent_frame("/camera_link")
+                     .with_child_frame("/camera_link#image");
+
+  auto stream = rerun_client_->stream();
+
+  stream->log_static("/perse/sensors/camera", pinhole);
+  stream->log_static("/perse/sensors/camera",
+                     rerun::CoordinateFrame("/camera_link#image"));
+
+  // 2. Publica uma imagem estática de cor sólida (416x416 RGB) apenas uma vez
+  //    para servir de plano 2D de fundo
+  const uint32_t cam_w = 416;
+  const uint32_t cam_h = 416;
+  std::vector<uint8_t> solid_image(cam_w * cam_h * 3,
+                                   20); // Cinza escuro sutil (20, 20, 20)
+  auto static_img =
+      rerun::archetypes::Image::from_rgb24(solid_image, {cam_w, cam_h});
+  stream->log_static("/perse/sensors/camera", static_img);
 
   // Publica o estado inicial de transformações
   logData();

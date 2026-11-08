@@ -4,7 +4,7 @@
   <arg name="map_generator" default="true" />
   <arg name="model_path" default="" />
   <arg name="mission_points" default="$(find-pkg-share perse_bringup)/config/mission_points.yaml" />
-  <arg name="use_sim_time" default="true" />
+  <arg name="use_sim_time" default="false" />
 
   <arg name="perse_mujoco_params" default="$(find-pkg-share perse_mujoco)/config/perse_mujoco.yaml" />
   <arg name="sim_params" default="$(var perse_mujoco_params)" />

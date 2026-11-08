@@ -19,7 +19,9 @@ Pacote de simulação física baseada no **MuJoCo** para o robô **Perse**. Dese
   - **IMU Completa (`/perse/sensors/imu`):** Acelerômetro e giroscópio acoplados ao `base_link` com matrizes de covariância.
   - **Odometria de Rodas (`/perse/sensors/encoder_fusion/distance`):** Leitura angular quantizada (resolução de $1\,\text{mm}$) com paridade total ao robô real e Webots.
   - **Bumper de Impacto (`/perse/sensors/bumper`):** Detecção de contato por contração da junta linear ($q < -0.005\,\text{m}$) e colisões ativas.
-  - **Sensor Indutivo (`/perse/sensors/inductive_sensor`):** Detecção de proximidade 2D em relação às placas metálicas ($1 \times 1\,\text{m}$) associadas aos cones de missão.
+  - **Sensor Indutivo (`/perse/sensors/inductive_sensor`):** Detecção de proximidade 2D em relação às placas metálicas ($1 \times 1\,\text{m}$) de todos os pontos de missão na cena.
+  - **Transformada TF Dinâmica:** Emissão contínua de `odom -> base_link` conectada aos frames de sensores (`camera_link`, `lidar_link`).
+  - **Visualização Rerun C++ (`perse_mujoco_rerun`):** Renderização direta no visualizador Rerun em sincronia com o relay Rewire na timeline `ros_time`, incluindo malhas 3D com shading, imagem estática 2D de fundo ($416 \times 416$) e árvore de projeção Pinhole (`tf#/perse/sensors/camera` $\rightarrow$ `/camera_link`) compartilhada com as bounding boxes 2D.
   - **LiDAR 2D 360° (`/perse/sensors/lidar`):** Varredura analítica de 360 feixes via raycasting `mj_ray()` em loop C++ a 10 Hz.
   - **Visão Sintética Ground-Truth (`/perse/sensors/camera/recognitions`):** Projeção analítica dos cones ativos no frustum da câmera frontal ($416 \times 416$), com frustum culling e teste de oclusão via raycast `mj_ray()`, consumível diretamente pelo `ControlVision`.
   - **Ground Truth Odometry (`/perse/simulation/odom_gt`):** Pose e velocidades reais extraídas diretamente da raiz livre do robô.

@@ -1,6 +1,7 @@
 #include "perse_mujoco/SensorBridge.hpp"
 
 #include <cmath>
+#include <geometry_msgs/msg/transform_stamped.hpp>
 #include <limits>
 
 namespace perse_mujoco {
@@ -74,6 +75,20 @@ SensorBridge::SensorBridge(rclcpp::Node *node, const mjModel *m,
   inductive_site_id_ = mj_name2id(m, mjOBJ_SITE, "inductive_site");
   lidar_site_id_ = mj_name2id(m, mjOBJ_SITE, "lidar_site");
 
+  tf_broadcaster_ = std::make_unique<tf2_ros::TransformBroadcaster>(node_);
+
+  // Mapeia todas as placas metálicas presentes no modelo MuJoCo
+  for (int i = 0; i < m->nbody; ++i) {
+    const char *name = mj_id2name(m, mjOBJ_BODY, i);
+    if (name && std::string(name).rfind("plate_", 0) == 0) {
+      MetalPlate plate;
+      plate.body_id = i;
+      plate.x = m->body_pos[i * 3 + 0];
+      plate.y = m->body_pos[i * 3 + 1];
+      plates_.push_back(plate);
+    }
+  }
+
   // Publica valores iniciais nos tópicos latchados
   std_msgs::msg::Float64 enc_init;
   enc_init.data = 0.0;
@@ -100,9 +115,12 @@ void SensorBridge::publishClock(const mjData *d) {
 }
 
 void SensorBridge::updateAndPublish(const mjModel *m, const mjData *d,
-                                    const rclcpp::Time &stamp) {
-  // Publica relógio a cada invocação do step
-  publishClock(d);
+                                    const rclcpp::Time &stamp,
+                                    bool publish_clock) {
+  // Publica relógio a cada invocação do step se habilitado
+  if (publish_clock) {
+    publishClock(d);
+  }
 
   // Detecta se houve reset do relógio de simulação (t voltou para 0)
   if (stamp < last_imu_time_) {
@@ -256,25 +274,44 @@ void SensorBridge::publishInductive(const mjModel *m, const mjData *d,
                                     const rclcpp::Time &stamp) {
   (void)m;
   (void)stamp;
-  if (!inductive_pub_ || inductive_site_id_ < 0 || !synthetic_vision_)
+  if (!inductive_pub_ || inductive_site_id_ < 0)
     return;
 
   const mjtNum *site_pos = &d->site_xpos[inductive_site_id_ * 3];
   bool reading = false;
   double half_plate = inductive_plate_size_ / 2.0;
 
-  for (const auto &cone : synthetic_vision_->getCones()) {
-    double cx = cone.x;
-    double cy = cone.y;
-    if (cone.body_id >= 0) {
-      cx = d->xpos[cone.body_id * 3 + 0];
-      cy = d->xpos[cone.body_id * 3 + 1];
+  // 1. Testa contra todas as placas metálicas cadastradas do modelo MuJoCo
+  for (const auto &plate : plates_) {
+    double px = plate.x;
+    double py = plate.y;
+    if (plate.body_id >= 0) {
+      px = d->xpos[plate.body_id * 3 + 0];
+      py = d->xpos[plate.body_id * 3 + 1];
     }
 
-    if (std::abs(site_pos[0] - cx) <= half_plate &&
-        std::abs(site_pos[1] - cy) <= half_plate) {
+    if (std::abs(site_pos[0] - px) <= half_plate &&
+        std::abs(site_pos[1] - py) <= half_plate) {
       reading = true;
       break;
+    }
+  }
+
+  // 2. Fallback: se houver cones em synthetic_vision_ sem placa identificada
+  if (!reading && synthetic_vision_) {
+    for (const auto &cone : synthetic_vision_->getCones()) {
+      double cx = cone.x;
+      double cy = cone.y;
+      if (cone.body_id >= 0) {
+        cx = d->xpos[cone.body_id * 3 + 0];
+        cy = d->xpos[cone.body_id * 3 + 1];
+      }
+
+      if (std::abs(site_pos[0] - cx) <= half_plate &&
+          std::abs(site_pos[1] - cy) <= half_plate) {
+        reading = true;
+        break;
+      }
     }
   }
 
@@ -362,6 +399,22 @@ void SensorBridge::publishOdomGt(const mjModel *m, const mjData *d,
   msg.twist.twist.angular.z = d->qvel[5];
 
   odom_gt_pub_->publish(msg);
+
+  // Transmite a transformada dinâmica odom -> base_link
+  if (tf_broadcaster_) {
+    geometry_msgs::msg::TransformStamped tf_msg;
+    tf_msg.header.stamp = stamp;
+    tf_msg.header.frame_id = "odom";
+    tf_msg.child_frame_id = "base_link";
+
+    tf_msg.transform.translation.x = msg.pose.pose.position.x;
+    tf_msg.transform.translation.y = msg.pose.pose.position.y;
+    tf_msg.transform.translation.z = msg.pose.pose.position.z;
+
+    tf_msg.transform.rotation = msg.pose.pose.orientation;
+
+    tf_broadcaster_->sendTransform(tf_msg);
+  }
 }
 
 } // namespace perse_mujoco
