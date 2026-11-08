@@ -16,6 +16,7 @@ find_package(vision_msgs REQUIRED)
 find_package(rosgraph_msgs REQUIRED)
 find_package(std_srvs REQUIRED)
 find_package(yaml-cpp REQUIRED)
+find_package(perse_lib REQUIRED)
 
 # ------------------------------------------------------------------------------
 # 1. Tenta encontrar o MuJoCo instalado no sistema via find_package
@@ -165,6 +166,42 @@ ament_target_dependencies(perse_mujoco_viewer
 )
 
 # ------------------------------------------------------------------------------
+# Executavel do visualizador Rerun C++
+# ------------------------------------------------------------------------------
+add_executable(perse_mujoco_rerun
+  src/perse_mujoco_rerun.cpp
+  src/lib/MujocoRerun.cpp
+)
+
+target_include_directories(perse_mujoco_rerun PUBLIC
+  $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
+  $<INSTALL_INTERFACE:include>
+)
+
+target_link_libraries(perse_mujoco_rerun
+  mujoco::mujoco
+  perse_lib::perse_lib
+  rerun_sdk
+)
+
+if(TARGET mujoco::mujoco)
+  get_target_property(MUJOCO_LIB_LOC mujoco::mujoco IMPORTED_LOCATION)
+  if(MUJOCO_LIB_LOC)
+    get_filename_component(MUJOCO_LIB_DIR "${MUJOCO_LIB_LOC}" DIRECTORY)
+    set_target_properties(perse_mujoco_rerun PROPERTIES
+      BUILD_RPATH "${MUJOCO_LIB_DIR}"
+      INSTALL_RPATH "${MUJOCO_LIB_DIR}"
+    )
+  endif()
+endif()
+
+ament_target_dependencies(perse_mujoco_rerun
+  rclcpp
+  ament_index_cpp
+  perse_lib
+)
+
+# ------------------------------------------------------------------------------
 # Geracao automatica do perse_robot.xml a partir de perse_robot.xml.xacro e perse_properties.yaml
 # ------------------------------------------------------------------------------
 find_package(perse_bringup QUIET)
@@ -184,11 +221,13 @@ add_custom_target(generate_perse_robot_xml ALL
 
 add_dependencies(perse_mujoco_node generate_perse_robot_xml)
 add_dependencies(perse_mujoco_viewer generate_perse_robot_xml)
+add_dependencies(perse_mujoco_rerun generate_perse_robot_xml)
 
 # Instalacao de binarios e recursos
 install(TARGETS
   perse_mujoco_node
   perse_mujoco_viewer
+  perse_mujoco_rerun
   DESTINATION lib/${PROJECT_NAME}
 )
 

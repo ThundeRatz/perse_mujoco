@@ -4,3 +4,9 @@ perse_mujoco_node:
     socket_path: "/tmp/perse_mujoco.sock"
     publish_rate_hz: 100.0
     publish_clock: true
+
+perse_mujoco_rerun:
+  ros__parameters:
+    socket_path: "/tmp/perse_mujoco.sock"
+    rerun:
+      entity_root: "/mujoco"

@@ -49,6 +49,7 @@ perse_mujoco/
 ├── include/perse_mujoco/           # Headers C++ (exclusivamente declarações)
 │   ├── ActuatorBridge.hpp          # Subscrições cmd_vel, led_rod e cinemática Ackermann
 │   ├── MujocoIpcBridge.hpp         # Interface da ponte IPC via Unix Domain Socket
+│   ├── MujocoRerun.hpp             # Visualizador Rerun C++ (streaming de corpos e malhas 3D)
 │   ├── MujocoViewer.hpp            # Interface do visualizador nativo GLFW
 │   ├── PerseMujocoNode.hpp         # Nó principal de simulação física e loop ROS 2
 │   ├── SensorBridge.hpp            # Conversores MuJoCo -> Tópicos ROS 2 (IMU, Encoders, Bumper, Lidar, Odom)
@@ -57,12 +58,14 @@ perse_mujoco/
 │   ├── lib/                        # Implementações de classes e componentes do simulador
 │   │   ├── ActuatorBridge.cpp      # Mapeamento Ackermann e velocidades nas rodas
 │   │   ├── MujocoIpcBridge.cpp     # Implementação do servidor socket e comandos JSON
+│   │   ├── MujocoRerun.cpp         # Implementação da integração de renderização e transforms Rerun
 │   │   ├── MujocoViewer.cpp        # Visualizador nativo GLFW com suporte a screenshot e IPC
 │   │   ├── PerseMujocoNode.cpp     # Implementação do nó central e avanço determinístico de física
 │   │   ├── SensorBridge.cpp        # Extração de sensores e publicadores ROS 2
 │   │   └── SyntheticVision.cpp     # Projeção geométrica 2D e raycasting de linha de visada
 │   ├── perse_mujoco_node.cpp       # Entrypoint main() do nó de simulação
-│   └── perse_mujoco_viewer.cpp     # Entrypoint main() do nó visualizador
+│   ├── perse_mujoco_rerun.cpp      # Entrypoint main() do nó de visualização Rerun
+│   └── perse_mujoco_viewer.cpp     # Entrypoint main() do nó visualizador nativo GLFW
 ├── model/                          # Modelos MJCF e malhas 3D
 │   ├── perse_robot.xml.xacro       # Template paramétrico Xacro sincronizado com perse_properties.yaml
 │   ├── perse_robot.xml             # Modelo MJCF gerado automaticamente no build via Xacro

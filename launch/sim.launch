@@ -1,5 +1,6 @@
 <launch>
   <arg name="gui" default="true" />
+  <arg name="rerun" default="false" />
   <arg name="map_generator" default="true" />
   <arg name="model_path" default="" />
   <arg name="mission_points" default="$(find-pkg-share perse_bringup)/config/mission_points.yaml" />
@@ -9,6 +10,7 @@
   <arg name="sim_params" default="$(var perse_mujoco_params)" />
   <arg name="perse_properties" default="$(find-pkg-share perse_bringup)/config/perse_properties.yaml" />
   <arg name="topics" default="$(find-pkg-share perse_bringup)/config/topics.yaml" />
+  <arg name="rerun_config" default="$(find-pkg-share perse_bringup)/config/rerun.yaml" />
 
   <!-- Gerador dinâmico de mapas em Python (independente, atende via Trigger service) -->
   <group if="$(var map_generator)">
@@ -43,5 +45,18 @@
   <group if="$(var gui)">
     <node pkg="perse_mujoco" exec="perse_mujoco_viewer" name="perse_mujoco_viewer"
           output="screen" args="$(var model_path)" />
+  </group>
+
+  <!-- Visualizador Rerun C++ MuJoCo (quando rerun ativo e gui desativado) -->
+  <group unless="$(var gui)">
+    <group if="$(var rerun)">
+      <node pkg="perse_mujoco" exec="perse_mujoco_rerun" name="perse_mujoco_rerun"
+            output="screen">
+        <param from="$(var perse_mujoco_params)" />
+        <param from="$(var rerun_config)" />
+        <param name="model_path" value="$(var model_path)" />
+        <param name="rerun.enable" value="$(var rerun)" />
+      </node>
+    </group>
   </group>
 </launch>
