@@ -5,15 +5,25 @@
 
 int main(int argc, char **argv) {
   std::string model_path = "";
-  if (argc > 1) {
+  if (argc > 1 && std::string(argv[1]).size() > 0) {
     model_path = argv[1];
-  } else {
+  }
+
+  if (model_path.empty()) {
     try {
       std::string pkg_share =
           ament_index_cpp::get_package_share_directory("perse_mujoco");
-      model_path = pkg_share + "/model/test_scene.xml";
+      std::string gen_path = pkg_share + "/model/generated_scene.xml";
+      // Se houver cena gerada recentemente, usa ela; caso contrário usa default_scene.xml
+      FILE *f = fopen(gen_path.c_str(), "r");
+      if (f) {
+        fclose(f);
+        model_path = gen_path;
+      } else {
+        model_path = pkg_share + "/model/default_scene.xml";
+      }
     } catch (...) {
-      model_path = "model/test_scene.xml";
+      model_path = "model/default_scene.xml";
     }
   }
 

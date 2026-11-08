@@ -23,7 +23,7 @@ Pacote de simulação física baseada no **MuJoCo** para o robô **Perse**. Dese
   - **LiDAR 2D 360° (`/perse/sensors/lidar`):** Varredura analítica de 360 feixes via raycasting `mj_ray()` em loop C++ a 10 Hz.
   - **Visão Sintética Ground-Truth (`/perse/sensors/camera/recognitions`):** Projeção analítica dos cones ativos no frustum da câmera frontal ($416 \times 416$), com frustum culling e teste de oclusão via raycast `mj_ray()`, consumível diretamente pelo `ControlVision`.
   - **Ground Truth Odometry (`/perse/simulation/odom_gt`):** Pose e velocidades reais extraídas diretamente da raiz livre do robô.
-  - **Atuação Ackermann e Velocidade (`topics.cmd_vel`):** Cinemática Ackermann automática para os servos dianteiros e controle de cruzeiro nas rodas traseiras com mapeamento calibrado para comandos normalizados (0 a 1) do robô real (`speed.forward: 1.2 m/s`, `speed.backward: 0.8 m/s`), consumindo limites mecânicos e geometria diretamente de `perse_properties.yaml` e tópicos de `topics.yaml`.
+  - **Atuação Ackermann e Velocidade (`topics.cmd_vel`):** Cinemática Ackermann automática para os servos dianteiros e controle de cruzeiro nas rodas traseiras com mapeamento calibrado para comandos normalizados (0 a 1) do robô real, consumindo limites de velocidade (`properties.limits.speed.forward` e `properties.limits.speed.backward`), limites mecânicos e geometria diretamente de `perse_properties.yaml` e tópicos de `topics.yaml`.
   - **Haste de LED (`topics.led`):** Controle de acionamento do sinalizador de missão.
 - **Simulação Headless Determinística:** O loop de física roda em processo ROS 2 desacoplado de interface gráfica, com publicação de `/clock` e taxa de 500 Hz com integrador implícito `implicitfast`.
 - **Ponte IPC de Alta Performance:** Comunicação via Unix Domain Socket (`/tmp/perse_mujoco.sock`) permitindo controle de tempo e coleta de telemetria sem interferir na estabilidade do motor de física.
@@ -31,7 +31,7 @@ Pacote de simulação física baseada no **MuJoCo** para o robô **Perse**. Dese
   - `Free Run`: Execução contínua sincronizada com o relógio ROS 2.
   - `Step Mode`: Execução passo-a-passo sob demanda (`sim_step(N)`), ideal para testes automatizados, depuração e IA.
 - **AI Harness (MCP):** Servidor MCP integrado (`perse_mujoco_mcp`) baseado no SDK oficial da Anthropic (`MCPServer`), expondo ferramentas de inspeção, telemetria, controle de câmera e captura de screenshots.
-- **Suite de Testes Automatizados:** Testes físicos (`test_perse_model.py`) e testes de malha fechada ROS 2 (`test_ros_bridge.py`).
+- **Suite de Testes Automatizados:** Testes físicos (`test/test_perse_model.py`), renderizador offscreen (`test/test_renderer.py`) e testes de malha fechada ROS 2 (`test/test_ros_bridge.py`).
 
 ---
 
@@ -45,6 +45,7 @@ perse_mujoco/
 ├── SPEC.md                         # Especificação técnica completa da simulação
 ├── AI_HARNESS_SPEC.md              # Especificação de arquitetura do harness de IA
 ├── config/                         # Parâmetros de simulação e arenas
+│   └── perse_mujoco.yaml           # Configurações do nó da simulação (taxas, socket IPC)
 ├── include/perse_mujoco/           # Headers C++ (exclusivamente declarações)
 │   ├── ActuatorBridge.hpp          # Subscrições cmd_vel, led_rod e cinemática Ackermann
 │   ├── MujocoIpcBridge.hpp         # Interface da ponte IPC via Unix Domain Socket
@@ -52,20 +53,25 @@ perse_mujoco/
 │   ├── PerseMujocoNode.hpp         # Nó principal de simulação física e loop ROS 2
 │   ├── SensorBridge.hpp            # Conversores MuJoCo -> Tópicos ROS 2 (IMU, Encoders, Bumper, Lidar, Odom)
 │   └── SyntheticVision.hpp         # Projeção analítica de cones, frustum culling e oclusão via raycast
-├── src/                            # Implementações C++
-│   ├── ActuatorBridge.cpp          # Mapeamento Ackermann e velocidades nas rodas
-│   ├── MujocoIpcBridge.cpp         # Implementação do servidor socket e comandos JSON
-│   ├── MujocoViewer.cpp            # Visualizador nativo GLFW com suporte a screenshot e IPC
-│   ├── PerseMujocoNode.cpp         # Implementação do nó central e avanço determinístico de física
-│   ├── SensorBridge.cpp            # Extração de sensores e publicadores ROS 2
-│   ├── SyntheticVision.cpp         # Projeção geométrica 2D e raycasting de linha de visada
+├── src/                            # Implementações e nós C++
+│   ├── lib/                        # Implementações de classes e componentes do simulador
+│   │   ├── ActuatorBridge.cpp      # Mapeamento Ackermann e velocidades nas rodas
+│   │   ├── MujocoIpcBridge.cpp     # Implementação do servidor socket e comandos JSON
+│   │   ├── MujocoViewer.cpp        # Visualizador nativo GLFW com suporte a screenshot e IPC
+│   │   ├── PerseMujocoNode.cpp     # Implementação do nó central e avanço determinístico de física
+│   │   ├── SensorBridge.cpp        # Extração de sensores e publicadores ROS 2
+│   │   └── SyntheticVision.cpp     # Projeção geométrica 2D e raycasting de linha de visada
 │   ├── perse_mujoco_node.cpp       # Entrypoint main() do nó de simulação
 │   └── perse_mujoco_viewer.cpp     # Entrypoint main() do nó visualizador
 ├── model/                          # Modelos MJCF e malhas 3D
 │   ├── perse_robot.xml.xacro       # Template paramétrico Xacro sincronizado com perse_properties.yaml
 │   ├── perse_robot.xml             # Modelo MJCF gerado automaticamente no build via Xacro
-│   ├── test_scene.xml              # Cenário modular de teste com solo, obstáculos e <include file="perse_robot.xml"/>
+│   ├── default_scene.xml           # Cena padrão mínima (apenas robô e chão para fallback autônomo)
+│   ├── generated_scene.xml         # Cenário montado dinamicamente em runtime pelo map_generator_node
 │   └── meshes/                     # Malhas 3D processadas (OBJs com normais suaves e STLs)
+│       ├── cone_body.obj           # Corpo do cone de trânsito em laranja vibrante
+│       ├── cone_stripes.obj        # Listras brancas refletivas do cone
+│       ├── traffic_cone.obj        # Modelo original do cone
 │       ├── locomocao_crease.obj    # Chassi mecânico com normais de vértice suaves
 │       ├── tampa_crease.obj        # Tampa/carenagem superior com crease-shading
 │       ├── bumper_base_fixed.obj   # Suporte de montagem fixo aparafusado no chassi
@@ -77,11 +83,17 @@ perse_mujoco/
 │   ├── sim.launch                  # Launch principal MuJoCo (nó de física, TFs estáticos e GUI opcional)
 │   ├── sim_test.launch             # Inicialização básica de teste do nó de física
 │   └── viewer.launch               # Inicialização da janela interativa GLFW
-├── test/                           # Testes automatizados
+├── test/                           # Testes automatizados e cenas de teste
+│   ├── model/                      # Modelos e cenários MJCF de teste
+│   │   └── test_scene.xml          # Cena de validação física com obstáculos, chapas e cones de teste
+│   ├── cpp/                        # Nós e utilitários C++ para testes
+│   │   ├── TestSimNode.hpp
+│   │   └── TestSimNode.cpp
 │   ├── test_perse_model.py         # Testes de integridade física (suspensão, direção, tração e bumper)
+│   ├── test_renderer.py            # Renderizador offscreen para testes visuais
 │   └── test_ros_bridge.py          # Testes de integração ROS 2 (tópicos, sensores, visão e resposta dinâmica)
 └── python/perse_mujoco/            # Módulos Python
-    ├── test_renderer.py            # Renderizador offscreen para testes visuais
+    ├── map_generator_node.py       # Nó ROS 2 de geração dinâmica de mapas (serviço Trigger)
     └── mcp_server/                 # Servidor e cliente MCP
         ├── ipc_client.py           # Cliente IPC Unix Domain Socket
         └── server.py               # Servidor MCP stdio (ferramentas de IA)

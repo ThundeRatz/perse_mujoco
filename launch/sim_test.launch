@@ -1,10 +1,11 @@
 <launch>
   <!-- Argumentos configuraveis -->
-  <arg name="model_path" default="$(find-pkg-share perse_mujoco)/model/test_scene.xml" />
+  <arg name="model_path" default="$(find-pkg-share perse_mujoco)/test/model/test_scene.xml" />
   <arg name="publish_rate_hz" default="50.0" />
   <arg name="publish_clock" default="true" />
 
-  <arg name="sim_params" default="$(find-pkg-share perse_mujoco)/config/sim_params.yaml" />
+  <arg name="perse_mujoco_params" default="$(find-pkg-share perse_mujoco)/config/perse_mujoco.yaml" />
+  <arg name="sim_params" default="$(var perse_mujoco_params)" />
   <arg name="perse_properties" default="$(find-pkg-share perse_bringup)/config/perse_properties.yaml" />
   <arg name="topics" default="$(find-pkg-share perse_bringup)/config/topics.yaml" />
 

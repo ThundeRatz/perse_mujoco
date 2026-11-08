@@ -1,4 +1,4 @@
-#include "perse_mujoco/TestSimNode.hpp"
+#include "TestSimNode.hpp"
 
 #include <ament_index_cpp/get_package_share_directory.hpp>
 #include <stdexcept>

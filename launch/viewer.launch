@@ -1,5 +1,5 @@
 <launch>
-  <arg name="model_path" default="$(find-pkg-share perse_mujoco)/model/test_scene.xml" />
+  <arg name="model_path" default="" />
 
   <!-- Visualizador Nativo Independente MuJoCo GLFW -->
   <node pkg="perse_mujoco" exec="perse_mujoco_viewer" name="perse_mujoco_viewer" output="screen" args="$(var model_path)" />

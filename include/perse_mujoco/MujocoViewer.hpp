@@ -93,7 +93,7 @@ private:
   std::mutex data_mutex_;
   std::atomic<bool> running_{false};
   std::atomic<bool> connected_to_sim_{false};
-  std::atomic<bool> tracking_robot_{false};
+  std::atomic<bool> tracking_robot_{true};
   int tracking_body_id_{-1};
 
   std::thread sync_thread_;

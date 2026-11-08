@@ -49,9 +49,12 @@ def render_scene(model_path: str, output_image_path: str, width: int = 640, heig
 
 
 if __name__ == "__main__":
+    default_model = os.path.join(
+        os.path.dirname(os.path.abspath(__file__)), "model", "test_scene.xml"
+    )
     parser = argparse.ArgumentParser(description="Renderiza cena de teste do MuJoCo")
-    parser.add_argument("--model", type=str, default="src/perse_mujoco/model/test_scene.xml", help="Caminho do modelo MJCF")
-    parser.add_argument("--output", type=str, default="src/perse_mujoco/test_render.png", help="Caminho de saída da imagem")
+    parser.add_argument("--model", type=str, default=default_model, help="Caminho do modelo MJCF")
+    parser.add_argument("--output", type=str, default="/tmp/perse_mujoco_test_render.png", help="Caminho de saída da imagem")
     parser.add_argument("--steps", type=int, default=250, help="Passos de física antes de renderizar")
     args = parser.parse_args()
 

@@ -1,29 +1,32 @@
 <launch>
   <arg name="gui" default="true" />
-  <arg name="model_path" default="$(find-pkg-share perse_mujoco)/model/test_scene.xml" />
+  <arg name="map_generator" default="true" />
+  <arg name="model_path" default="" />
   <arg name="mission_points" default="$(find-pkg-share perse_bringup)/config/mission_points.yaml" />
-  <arg name="publish_rate_hz" default="100.0" />
-  <arg name="publish_clock" default="true" />
   <arg name="use_sim_time" default="true" />
-  <arg name="max_forward_speed" default="1.2" />
-  <arg name="max_backward_speed" default="0.8" />
 
-  <arg name="sim_params" default="$(find-pkg-share perse_mujoco)/config/sim_params.yaml" />
+  <arg name="perse_mujoco_params" default="$(find-pkg-share perse_mujoco)/config/perse_mujoco.yaml" />
+  <arg name="sim_params" default="$(var perse_mujoco_params)" />
   <arg name="perse_properties" default="$(find-pkg-share perse_bringup)/config/perse_properties.yaml" />
   <arg name="topics" default="$(find-pkg-share perse_bringup)/config/topics.yaml" />
+
+  <!-- Gerador dinâmico de mapas em Python (independente, atende via Trigger service) -->
+  <group if="$(var map_generator)">
+    <node pkg="perse_mujoco" exec="map_generator_node.py" name="map_generator_node" output="screen">
+      <param from="$(var topics)" />
+      <param name="mission_points" value="$(var mission_points)" />
+    </node>
+  </group>
 
   <!-- Nó principal de simulação MuJoCo C++ -->
   <node pkg="perse_mujoco" exec="perse_mujoco_node" name="perse_mujoco_node" output="screen">
     <param from="$(var sim_params)" />
     <param from="$(var perse_properties)" />
     <param from="$(var topics)" />
+    <param from="$(var perse_mujoco_params)" />
     <param name="model_path" value="$(var model_path)" />
     <param name="mission_points" value="$(var mission_points)" />
-    <param name="publish_rate_hz" value="$(var publish_rate_hz)" />
-    <param name="publish_clock" value="$(var publish_clock)" />
     <param name="use_sim_time" value="$(var use_sim_time)" />
-    <param name="speed.forward" value="$(var max_forward_speed)" />
-    <param name="speed.backward" value="$(var max_backward_speed)" />
   </node>
 
   <!-- Transformações Estáticas TF (Paridade com Webots e Robô Real) -->

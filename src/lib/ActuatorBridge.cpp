@@ -6,13 +6,16 @@
 namespace perse_mujoco {
 
 ActuatorBridge::ActuatorBridge(rclcpp::Node *node, mjModel *m) : node_(node) {
-  // Lê limites de velocidade (específicos da simulação) e limites
-  // mecânicos/geometria de perse_properties
+  // Lê limites de velocidade, limites mecânicos e geometria de perse_properties
   max_forward_speed_ =
-      node_->declare_parameter("speed.forward", rclcpp::PARAMETER_DOUBLE)
+      node_
+          ->declare_parameter("properties.limits.speed.forward",
+                              rclcpp::PARAMETER_DOUBLE)
           .get<double>();
   max_reverse_speed_ =
-      node_->declare_parameter("speed.backward", rclcpp::PARAMETER_DOUBLE)
+      node_
+          ->declare_parameter("properties.limits.speed.backward",
+                              rclcpp::PARAMETER_DOUBLE)
           .get<double>();
   max_steer_ = node_
                    ->declare_parameter("properties.limits.steer",

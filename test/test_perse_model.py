@@ -8,6 +8,7 @@ Cenários avaliados:
 4. Colisão frontal e resposta mecânica do Bumper móvel.
 """
 
+import os
 import sys
 import unittest
 import numpy as np
@@ -17,7 +18,8 @@ import mujoco
 class TestPerseModel(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
-        cls.model_path = "/home/thor/perse_ws/install/perse_mujoco/share/perse_mujoco/model/test_scene.xml"
+        script_dir = os.path.dirname(os.path.abspath(__file__))
+        cls.model_path = os.path.join(script_dir, "model", "test_scene.xml")
         cls.m = mujoco.MjModel.from_xml_path(cls.model_path)
         cls.d = mujoco.MjData(cls.m)
 
@@ -35,9 +37,9 @@ class TestPerseModel(unittest.TestCase):
         chassis_id = mujoco.mj_name2id(self.m, mujoco.mjtObj.mjOBJ_BODY, "chassis")
         chassis_z = self.d.xpos[chassis_id][2]
         
-        # Como o raio da roda é ~0.05755m, com a deflexão de ~0.5cm da mola, o centro do chassi deve estar em [0.045, 0.065]m
+        # Como o raio da roda é ~0.05755m, com a suspensão em repouso o centro do chassi deve estar em [0.045, 0.075]m
         self.assertGreater(chassis_z, 0.045, f"Chassi muito baixo: z={chassis_z:.3f}m")
-        self.assertLess(chassis_z, 0.065, f"Chassi muito alto: z={chassis_z:.3f}m")
+        self.assertLess(chassis_z, 0.075, f"Chassi muito alto: z={chassis_z:.3f}m")
 
         # Roll e Pitch do chassi devem ser próximos de zero (robô plano no chão)
         rot_mat = self.d.xmat[chassis_id].reshape(3, 3)

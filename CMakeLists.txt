@@ -14,6 +14,7 @@ find_package(nav_msgs REQUIRED)
 find_package(std_msgs REQUIRED)
 find_package(vision_msgs REQUIRED)
 find_package(rosgraph_msgs REQUIRED)
+find_package(std_srvs REQUIRED)
 find_package(yaml-cpp REQUIRED)
 
 # ------------------------------------------------------------------------------
@@ -90,11 +91,11 @@ find_package(glfw3 REQUIRED)
 # ------------------------------------------------------------------------------
 add_executable(perse_mujoco_node
   src/perse_mujoco_node.cpp
-  src/PerseMujocoNode.cpp
-  src/ActuatorBridge.cpp
-  src/SensorBridge.cpp
-  src/SyntheticVision.cpp
-  src/MujocoIpcBridge.cpp
+  src/lib/PerseMujocoNode.cpp
+  src/lib/ActuatorBridge.cpp
+  src/lib/SensorBridge.cpp
+  src/lib/SyntheticVision.cpp
+  src/lib/MujocoIpcBridge.cpp
 )
 
 target_include_directories(perse_mujoco_node PUBLIC
@@ -127,6 +128,7 @@ ament_target_dependencies(perse_mujoco_node
   std_msgs
   vision_msgs
   rosgraph_msgs
+  std_srvs
 )
 
 # ------------------------------------------------------------------------------
@@ -134,7 +136,7 @@ ament_target_dependencies(perse_mujoco_node
 # ------------------------------------------------------------------------------
 add_executable(perse_mujoco_viewer
   src/perse_mujoco_viewer.cpp
-  src/MujocoViewer.cpp
+  src/lib/MujocoViewer.cpp
 )
 
 target_include_directories(perse_mujoco_viewer PUBLIC
@@ -190,7 +192,12 @@ install(TARGETS
   DESTINATION lib/${PROJECT_NAME}
 )
 
-install(DIRECTORY model config launch python
+install(PROGRAMS
+  python/perse_mujoco/map_generator_node.py
+  DESTINATION lib/${PROJECT_NAME}
+)
+
+install(DIRECTORY model config launch python test
   DESTINATION share/${PROJECT_NAME}
 )
 

@@ -1,4 +1,5 @@
-<mujoco model="perse_test_scene">
+<?xml version="1.0"?>
+<mujoco model="perse_default_scene">
   <compiler angle="radian" meshdir="meshes/"/>
 
   <option timestep="0.002" integrator="implicitfast" gravity="0 0 -9.81"/>
@@ -17,10 +18,6 @@
     <texture type="skybox" builtin="gradient" rgb1="0.3 0.5 0.7" rgb2="0.05 0.05 0.1" width="512" height="512"/>
     <texture name="grid" type="2d" builtin="checker" width="512" height="512" rgb1="0.12 0.15 0.18" rgb2="0.18 0.22 0.26"/>
     <material name="grid_mat" texture="grid" texrepeat="20 20" reflectance="0.1"/>
-
-    <!-- Materiais específicos dos elementos da arena -->
-    <material name="cone_mat" rgba="1.0 0.4 0.0 1.0" reflectance="0.3"/>
-    <material name="box_mat" rgba="0.2 0.6 1.0 1.0" reflectance="0.4"/>
   </asset>
 
   <worldbody>
@@ -29,18 +26,6 @@
     <light directional="false" pos="3 -3 4" dir="-0.5 0.5 -1" castshadow="true" diffuse="0.4 0.4 0.4"/>
 
     <!-- Chao / Grid -->
-    <geom name="ground" type="plane" size="20 20 0.1" material="grid_mat" friction="1.0 0.05 0.001"/>
-
-    <!-- Obstáculos e Balizas na Arena para Testes de Esterçamento e Impacto -->
-    <body name="cone_1" pos="2.0 0.5 0.15">
-      <geom name="cone_geom_1" type="cylinder" size="0.08 0.15" material="cone_mat" mass="1.0" condim="3"/>
-    </body>
-    <body name="cone_2" pos="2.0 -0.5 0.15">
-      <geom name="cone_geom_2" type="cylinder" size="0.08 0.15" material="cone_mat" mass="1.0" condim="3"/>
-    </body>
-    <body name="obstacle_box" pos="3.5 0.0 0.15">
-      <freejoint name="obstacle_joint"/>
-      <geom name="obstacle_box_geom" type="box" size="0.2 0.3 0.15" material="box_mat" mass="2.0" condim="3"/>
-    </body>
+    <geom name="ground" type="plane" size="30 30 0.1" material="grid_mat" friction="1.0 0.05 0.001"/>
   </worldbody>
 </mujoco>

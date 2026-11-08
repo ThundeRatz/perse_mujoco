@@ -1,11 +1,6 @@
 # Configurações específicas do simulador MuJoCo
 perse_mujoco_node:
   ros__parameters:
-    model_path: ""
-    mission_points: ""
     socket_path: "/tmp/perse_mujoco.sock"
     publish_rate_hz: 100.0
     publish_clock: true
-    speed:
-      forward: 1.2
-      backward: 0.8

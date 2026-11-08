@@ -4,7 +4,6 @@
 <!-- |    EDITING THIS FILE BY HAND IS NOT RECOMMENDED                                 | -->
 <!-- =================================================================================== -->
 <mujoco model="perse_robot">
-  <compiler angle="radian" meshdir="meshes/"/>
   <default>
     <!-- Geometrias visuais puras (grupo 2, sem colisão) -->
     <default class="visual">
