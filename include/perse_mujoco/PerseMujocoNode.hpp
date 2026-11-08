@@ -22,7 +22,8 @@ public:
 
 private:
   void stepSimulation();
-  std::string resolveModelPath(const std::string &default_model_path, const std::string &generate_service_name);
+  std::string resolveModelPath(const std::string &default_model_path,
+                               const std::string &generate_service_name);
 
   mjModel *m_{nullptr};
   mjData *d_{nullptr};

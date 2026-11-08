@@ -14,7 +14,8 @@ int main(int argc, char **argv) {
       std::string pkg_share =
           ament_index_cpp::get_package_share_directory("perse_mujoco");
       std::string gen_path = pkg_share + "/model/generated_scene.xml";
-      // Se houver cena gerada recentemente, usa ela; caso contrário usa default_scene.xml
+      // Se houver cena gerada recentemente, usa ela; caso contrário usa
+      // default_scene.xml
       FILE *f = fopen(gen_path.c_str(), "r");
       if (f) {
         fclose(f);

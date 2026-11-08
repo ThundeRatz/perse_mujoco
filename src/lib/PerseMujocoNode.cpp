@@ -3,15 +3,17 @@
 #include <algorithm>
 #include <ament_index_cpp/get_package_share_directory.hpp>
 #include <fstream>
-#include <stdexcept>
 #include <std_srvs/srv/trigger.hpp>
+#include <stdexcept>
 
 namespace perse_mujoco {
 
-std::string PerseMujocoNode::resolveModelPath(const std::string &default_model_path,
-                                              const std::string &generate_service_name) {
+std::string
+PerseMujocoNode::resolveModelPath(const std::string &default_model_path,
+                                  const std::string &generate_service_name) {
   // Cria cliente para o serviço de geração de mapas
-  auto client = this->create_client<std_srvs::srv::Trigger>(generate_service_name);
+  auto client =
+      this->create_client<std_srvs::srv::Trigger>(generate_service_name);
 
   RCLCPP_INFO(this->get_logger(),
               "Aguardando gerador de mapas no serviço '%s' (timeout: 1.5s)...",
@@ -22,7 +24,8 @@ std::string PerseMujocoNode::resolveModelPath(const std::string &default_model_p
     auto future = client->async_send_request(req);
 
     // Aguarda a resposta do serviço
-    if (rclcpp::spin_until_future_complete(this->get_node_base_interface(), future,
+    if (rclcpp::spin_until_future_complete(this->get_node_base_interface(),
+                                           future,
                                            std::chrono::milliseconds(2000)) ==
         rclcpp::FutureReturnCode::SUCCESS) {
       auto resp = future.get();
@@ -40,7 +43,8 @@ std::string PerseMujocoNode::resolveModelPath(const std::string &default_model_p
           return generated_path;
         } else {
           RCLCPP_WARN(this->get_logger(),
-                      "Serviço respondeu sucesso, mas arquivo gerado não foi encontrado em '%s'. Usando cena padrão.",
+                      "Serviço respondeu sucesso, mas arquivo gerado não foi "
+                      "encontrado em '%s'. Usando cena padrão.",
                       generated_path.c_str());
         }
       } else {
@@ -49,8 +53,8 @@ std::string PerseMujocoNode::resolveModelPath(const std::string &default_model_p
                     resp->message.c_str());
       }
     } else {
-      RCLCPP_WARN(this->get_logger(),
-                  "Timeout ao aguardar resposta do gerador de mapas. Usando cena padrão.");
+      RCLCPP_WARN(this->get_logger(), "Timeout ao aguardar resposta do gerador "
+                                      "de mapas. Usando cena padrão.");
     }
   } else {
     RCLCPP_INFO(this->get_logger(),
@@ -75,7 +79,8 @@ PerseMujocoNode::PerseMujocoNode() : Node("perse_mujoco_node") {
 
   std::string model_path = model_path_param;
   if (model_path.empty()) {
-    // Tenta obter o mapa gerado pelo map_generator_node via ROS 2 Service Trigger
+    // Tenta obter o mapa gerado pelo map_generator_node via ROS 2 Service
+    // Trigger
     model_path = resolveModelPath(default_scene_path, generate_srv_name);
   }
 
