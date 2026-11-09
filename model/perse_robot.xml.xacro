@@ -96,13 +96,13 @@
       <geom name="lidar_geom" type="mesh" mesh="rplidar_mesh"
             pos="0.077 0 0.18" material="lidar_black" class="visual"/>
       <geom name="camera_geom" type="mesh" mesh="camera_mesh"
-            pos="0.31 0 0.18" material="sensor_black" class="visual"/>
+            pos="0.312 0 0.175" material="sensor_black" class="visual"/>
       <geom name="sensor_indutivo_geom" type="cylinder" size="0.0075 0.03"
             pos="0.305 -0.003 0.0086" euler="0 0.52 0" material="sensor_orange" class="visual"/>
 
       <!-- Caixas de Colisão do Chassi (Grupo 3, invisíveis) -->
       <geom name="chassis_base_col" type="box" size="0.16 0.06 0.035" pos="0.12 0 0.05" class="collision"/>
-      <geom name="chassis_top_col" type="box" size="0.14 0.06 0.04" pos="0.13 0 0.13" class="collision"/>
+      <geom name="chassis_top_col" type="box" size="0.14 0.06 0.075" pos="0.13 0 0.13" class="collision"/>
 
       <!-- Sites de Sensores (Invisíveis visualmente, usados apenas como referências de medição) -->
       <site name="imu_site" pos="0.1285 0 0.02" size="0.01" group="3" rgba="0 0 0 0"/>
@@ -113,7 +113,7 @@
       <!-- BUMPER MÓVEL (Aletas Deslizantes + Barra Frontal tipo Botão)        -->
       <body name="bumper" pos="0.333 0 0.095">
         <joint name="bumper_joint" type="slide" axis="1 0 0" range="-0.03 0.0"
-               stiffness="1500" damping="30" springref="0" limited="true"
+               stiffness="1100" damping="30" springref="0" limited="true"
                solreflimit="0.005 1" solimplimit="0.95 0.99 0.001"/>
         <inertial pos="0.04 0 0" mass="0.15" diaginertia="0.0005 0.0005 0.0005"/>
         <geom name="bumper_moving_geom" type="mesh" mesh="bumper_moving_mesh" material="bumper_metal" class="visual"/>

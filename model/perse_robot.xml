@@ -62,11 +62,11 @@
       <geom class="visual" material="bumper_metal" mesh="bumper_base_fixed_mesh" name="bumper_base_geom" pos="0.333 0 0.095" type="mesh"/>
       <!-- Sensores no Chassi: RPLidar A2 Oficial Webots e Câmera -->
       <geom class="visual" material="lidar_black" mesh="rplidar_mesh" name="lidar_geom" pos="0.077 0 0.18" type="mesh"/>
-      <geom class="visual" material="sensor_black" mesh="camera_mesh" name="camera_geom" pos="0.31 0 0.18" type="mesh"/>
+      <geom class="visual" material="sensor_black" mesh="camera_mesh" name="camera_geom" pos="0.312 0 0.175" type="mesh"/>
       <geom class="visual" euler="0 0.52 0" material="sensor_orange" name="sensor_indutivo_geom" pos="0.305 -0.003 0.0086" size="0.0075 0.03" type="cylinder"/>
       <!-- Caixas de Colisão do Chassi (Grupo 3, invisíveis) -->
       <geom class="collision" name="chassis_base_col" pos="0.12 0 0.05" size="0.16 0.06 0.035" type="box"/>
-      <geom class="collision" name="chassis_top_col" pos="0.13 0 0.13" size="0.14 0.06 0.04" type="box"/>
+      <geom class="collision" name="chassis_top_col" pos="0.13 0 0.13" size="0.14 0.06 0.075" type="box"/>
       <!-- Sites de Sensores (Invisíveis visualmente, usados apenas como referências de medição) -->
       <site group="3" name="imu_site" pos="0.1285 0 0.02" rgba="0 0 0 0" size="0.01"/>
       <site group="3" name="lidar_site" pos="0.077 0 0.21" rgba="0 0 0 0" size="0.015"/>
@@ -74,7 +74,7 @@
       <site group="3" name="inductive_site" pos="0.305 -0.003 0.0086" rgba="0 0 0 0" size="0.01"/>
       <!-- BUMPER MÓVEL (Aletas Deslizantes + Barra Frontal tipo Botão)        -->
       <body name="bumper" pos="0.333 0 0.095">
-        <joint axis="1 0 0" damping="30" limited="true" name="bumper_joint" range="-0.03 0.0" solimplimit="0.95 0.99 0.001" solreflimit="0.005 1" springref="0" stiffness="1500" type="slide"/>
+        <joint axis="1 0 0" damping="30" limited="true" name="bumper_joint" range="-0.03 0.0" solimplimit="0.95 0.99 0.001" solreflimit="0.005 1" springref="0" stiffness="1100" type="slide"/>
         <inertial diaginertia="0.0005 0.0005 0.0005" mass="0.15" pos="0.04 0 0"/>
         <geom class="visual" material="bumper_metal" mesh="bumper_moving_mesh" name="bumper_moving_geom" type="mesh"/>
         <geom class="collision_bumper" name="bumper_blade_col" pos="0.045 0 0" size="0.01 0.175 0.02" type="box"/>

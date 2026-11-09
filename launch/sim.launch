@@ -54,6 +54,7 @@
             output="screen">
         <param from="$(var perse_mujoco_params)" />
         <param from="$(var rerun_config)" />
+        <param from="$(var topics)" />
         <param name="model_path" value="$(var model_path)" />
         <param name="rerun.enable" value="$(var rerun)" />
       </node>

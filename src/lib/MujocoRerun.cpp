@@ -2,6 +2,7 @@
 
 #include <ament_index_cpp/get_package_share_directory.hpp>
 #include <nlohmann/json.hpp>
+#include <rerun/archetypes/clear.hpp>
 #include <rerun/archetypes/coordinate_frame.hpp>
 #include <rerun/archetypes/image.hpp>
 #include <rerun/archetypes/pinhole.hpp>
@@ -33,6 +34,15 @@ MujocoRerun::MujocoRerun() : Node("perse_mujoco_rerun") {
   publish_rate_hz_ =
       this->declare_parameter("rerun.publish_rate_hz", rclcpp::PARAMETER_DOUBLE)
           .get<double>();
+  recognitions_topic_ =
+      this->declare_parameter("topics.bounding_boxes", rclcpp::PARAMETER_STRING)
+          .get<std::string>();
+
+  recognitions_sub_ =
+      this->create_subscription<vision_msgs::msg::Detection2DArray>(
+          recognitions_topic_, rclcpp::SensorDataQoS().reliable(),
+          std::bind(&MujocoRerun::recognitionsCallback, this,
+                    std::placeholders::_1));
 
   if (model_path_.empty()) {
     try {
@@ -555,6 +565,20 @@ void MujocoRerun::logData() {
 
     stream->log(body_path,
                 rerun::Transform3D::from_translation_rotation(trans, quat));
+  }
+}
+
+void MujocoRerun::recognitionsCallback(
+    const vision_msgs::msg::Detection2DArray::SharedPtr msg) {
+  if (!rerun_client_ || !rerun_client_->ok()) {
+    return;
+  }
+  // Quando a lista de detecções estiver vazia (cones saíram do campo de visão),
+  // emite um Clear FLAT na entidade para limpar imediatamente as bounding boxes
+  // do Rerun
+  if (msg->detections.empty()) {
+    rerun_client_->stream()->log(recognitions_topic_,
+                                 rerun::archetypes::Clear::FLAT);
   }
 }
 

@@ -4,6 +4,7 @@
 
 #include <mujoco/mujoco.h>
 #include <rclcpp/rclcpp.hpp>
+#include <vision_msgs/msg/detection2_d_array.hpp>
 
 #include <atomic>
 #include <memory>
@@ -27,6 +28,8 @@ private:
   void logData();
   void logGeomWithFrame(const std::string &entity_path, int geom_id,
                         const std::string &parent_frame);
+  void
+  recognitionsCallback(const vision_msgs::msg::Detection2DArray::SharedPtr msg);
 
   std::string model_path_;
   std::string sim_socket_path_;
@@ -40,6 +43,9 @@ private:
   std::mutex data_mutex_;
   std::atomic<bool> running_{false};
   std::thread sync_thread_;
+  rclcpp::Subscription<vision_msgs::msg::Detection2DArray>::SharedPtr
+      recognitions_sub_;
+  std::string recognitions_topic_;
 };
 
 } // namespace perse_mujoco
